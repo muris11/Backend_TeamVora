@@ -32,7 +32,7 @@ class BillDueReminderNotification extends Notification
             'split_bill_id' => $bill->id,
             'amount' => $this->billItem->amount,
             'due_date' => $bill->due_date->format('Y-m-d'),
-            'url' => route('finance.bills.show', $bill->id),
+            'url' => '/api/split-bills/' . $bill->id,
         ];
     }
 }

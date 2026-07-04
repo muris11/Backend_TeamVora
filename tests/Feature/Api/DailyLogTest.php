@@ -18,7 +18,7 @@ class DailyLogTest extends TestCase
     {
         parent::setUp();
         $this->seed(RoleSeeder::class);
-        $this->member = User::factory()->create()->assignRole('Member');
+        $this->member = User::factory()->create()->assignRole('member');
     }
 
     public function test_user_can_list_logs(): void
@@ -69,7 +69,7 @@ class DailyLogTest extends TestCase
 
     public function test_user_cannot_update_others_log(): void
     {
-        $other = User::factory()->create()->assignRole('Member');
+        $other = User::factory()->create()->assignRole('member');
         $log = DailyLog::factory()->create(['user_id' => $other->id]);
 
         $this->actingAs($this->member)

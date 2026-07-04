@@ -43,7 +43,7 @@ class CashBookController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -95,7 +95,7 @@ class CashBookController extends Controller
 
     public function update(Request $request, CashBook $cashBook)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -120,7 +120,7 @@ class CashBookController extends Controller
 
     public function destroy(Request $request, CashBook $cashBook)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

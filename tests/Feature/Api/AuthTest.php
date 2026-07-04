@@ -25,7 +25,7 @@ class AuthTest extends TestCase
             'email' => 'test@teamvora.local',
             'password' => bcrypt('password'),
         ]);
-        $user->assignRole('Member');
+        $user->assignRole('member');
 
         $response = $this->postJson('/api/login', [
             'email' => 'test@teamvora.local',
@@ -113,7 +113,7 @@ class AuthTest extends TestCase
     public function test_authenticated_user_can_get_profile(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('Member');
+        $user->assignRole('member');
 
         $this->actingAs($user)
             ->getJson('/api/me')

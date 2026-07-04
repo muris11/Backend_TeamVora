@@ -86,7 +86,7 @@ class TaskController extends Controller
 
     public function destroy(Request $request, Task $task)
     {
-        if ($request->user()->id !== $task->creator_id && ! $request->user()->hasRole('Admin')) {
+        if ($request->user()->id !== $task->creator_id && ! $request->user()->hasRole('super_admin')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

@@ -21,9 +21,9 @@ class CashBookTest extends TestCase
         parent::setUp();
         $this->seed(RoleSeeder::class);
 
-        $this->admin = User::factory()->create()->assignRole('Admin');
-        $this->treasurer = User::factory()->create()->assignRole('Treasurer');
-        $this->member = User::factory()->create()->assignRole('Member');
+        $this->admin = User::factory()->create()->assignRole('super_admin');
+        $this->treasurer = User::factory()->create()->assignRole('team_leader');
+        $this->member = User::factory()->create()->assignRole('member');
     }
 
     // --- Index ---

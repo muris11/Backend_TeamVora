@@ -21,7 +21,7 @@ class DashboardTest extends TestCase
     public function test_user_can_get_dashboard_stats(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('Member');
+        $user->assignRole('member');
 
         $this->actingAs($user)
             ->getJson('/api/dashboard/stats')
@@ -41,7 +41,7 @@ class DashboardTest extends TestCase
     public function test_dashboard_reflects_cashbook_data(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('Member');
+        $user->assignRole('member');
 
         CashBook::factory()->create(['type' => 'in', 'amount' => 100000, 'created_by' => $user->id]);
         CashBook::factory()->create(['type' => 'out', 'amount' => 30000, 'created_by' => $user->id]);

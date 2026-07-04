@@ -21,9 +21,9 @@ class MemberTest extends TestCase
         parent::setUp();
         $this->seed(RoleSeeder::class);
 
-        $this->admin = User::factory()->create()->assignRole('Admin');
-        $this->lead = User::factory()->create()->assignRole('Lead');
-        $this->member = User::factory()->create()->assignRole('Member');
+        $this->admin = User::factory()->create()->assignRole('super_admin');
+        $this->lead = User::factory()->create()->assignRole('team_leader');
+        $this->member = User::factory()->create()->assignRole('member');
     }
 
     // --- Index ---
@@ -54,28 +54,28 @@ class MemberTest extends TestCase
 
     public function test_admin_can_change_role(): void
     {
-        $target = User::factory()->create()->assignRole('Member');
+        $target = User::factory()->create()->assignRole('member');
 
         $this->actingAs($this->admin)
-            ->putJson("/api/members/{$target->id}/role", ['role' => 'Treasurer'])
+            ->putJson("/api/members/{$target->id}/role", ['role' => 'team_leader'])
             ->assertOk();
 
-        $this->assertTrue($target->fresh()->hasRole('Treasurer'));
+        $this->assertTrue($target->fresh()->hasRole('team_leader'));
     }
 
     public function test_cannot_change_own_role(): void
     {
         $this->actingAs($this->admin)
-            ->putJson("/api/members/{$this->admin->id}/role", ['role' => 'Member'])
+            ->putJson("/api/members/{$this->admin->id}/role", ['role' => 'member'])
             ->assertUnprocessable();
     }
 
     public function test_member_cannot_change_role(): void
     {
-        $target = User::factory()->create()->assignRole('Member');
+        $target = User::factory()->create()->assignRole('member');
 
         $this->actingAs($this->member)
-            ->putJson("/api/members/{$target->id}/role", ['role' => 'Admin'])
+            ->putJson("/api/members/{$target->id}/role", ['role' => 'super_admin'])
             ->assertForbidden();
     }
 
@@ -83,7 +83,7 @@ class MemberTest extends TestCase
 
     public function test_admin_can_update_user_permissions(): void
     {
-        $target = User::factory()->create()->assignRole('Member');
+        $target = User::factory()->create()->assignRole('member');
 
         $this->actingAs($this->admin)
             ->putJson("/api/members/{$target->id}/permissions", [
@@ -98,7 +98,7 @@ class MemberTest extends TestCase
 
     public function test_admin_can_update_role_permissions(): void
     {
-        $role = Role::findByName('Member');
+        $role = Role::findByName('member');
 
         $this->actingAs($this->admin)
             ->putJson("/api/roles/{$role->id}/permissions", [
@@ -111,7 +111,7 @@ class MemberTest extends TestCase
 
     public function test_member_cannot_update_role_permissions(): void
     {
-        $role = Role::findByName('Member');
+        $role = Role::findByName('member');
 
         $this->actingAs($this->member)
             ->putJson("/api/roles/{$role->id}/permissions", [

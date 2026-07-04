@@ -22,8 +22,8 @@ class MediaTest extends TestCase
         parent::setUp();
         $this->seed(RoleSeeder::class);
 
-        $this->admin = User::factory()->create()->assignRole('Admin');
-        $this->member = User::factory()->create()->assignRole('Member');
+        $this->admin = User::factory()->create()->assignRole('super_admin');
+        $this->member = User::factory()->create()->assignRole('member');
     }
 
     // --- Documents ---
@@ -119,7 +119,7 @@ class MediaTest extends TestCase
 
     public function test_non_owner_non_admin_cannot_delete(): void
     {
-        $other = User::factory()->create()->assignRole('Member');
+        $other = User::factory()->create()->assignRole('member');
         $media = TeamMedia::factory()->create(['user_id' => $other->id]);
 
         $this->actingAs($this->member)

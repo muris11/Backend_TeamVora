@@ -21,8 +21,8 @@ class TaskTest extends TestCase
         parent::setUp();
         $this->seed(RoleSeeder::class);
         Notification::fake();
-        $this->admin = User::factory()->create()->assignRole('Admin');
-        $this->member = User::factory()->create()->assignRole('Member');
+        $this->admin = User::factory()->create()->assignRole('super_admin');
+        $this->member = User::factory()->create()->assignRole('member');
     }
 
     public function test_user_can_list_tasks(): void

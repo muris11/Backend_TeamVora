@@ -76,7 +76,7 @@ class TeamInvitationController extends Controller
             'role' => 'member',
         ]);
 
-        $user->assignRole('Member');
+        $user->assignRole('member');
 
         $invitation->update(['status' => 'accepted']);
 

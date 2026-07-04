@@ -33,7 +33,7 @@ class RecurringBillController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -77,7 +77,7 @@ class RecurringBillController extends Controller
 
     public function update(Request $request, RecurringBill $recurringBill)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -102,7 +102,7 @@ class RecurringBillController extends Controller
 
     public function destroy(Request $request, RecurringBill $recurringBill)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -112,7 +112,7 @@ class RecurringBillController extends Controller
 
     public function generate(Request $request, RecurringBill $recurringBill)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -144,7 +144,7 @@ class RecurringBillController extends Controller
 
     public function toggleActive(Request $request, RecurringBill $recurringBill)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

@@ -79,7 +79,7 @@ class MediaController extends Controller
 
     public function destroy(Request $request, TeamMedia $media)
     {
-        $isAdmin = $request->user()->hasRole('Admin');
+        $isAdmin = $request->user()->hasRole('super_admin');
         if (! $isAdmin && $request->user()->id !== $media->user_id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }

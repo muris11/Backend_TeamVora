@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/email-settings', [\App\Http\Controllers\Api\EmailTemplateController::class, 'getSettings']);
         Route::post('/email-settings', [\App\Http\Controllers\Api\EmailTemplateController::class, 'updateSettings']);
         Route::get('/email-settings/preview', [\App\Http\Controllers\Api\EmailTemplateController::class, 'getPreview']);
+        Route::get('/email-config', [\App\Http\Controllers\Api\EmailConfigController::class, 'index']);
     });
 
     // Cash Book

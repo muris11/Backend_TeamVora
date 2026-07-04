@@ -33,7 +33,7 @@ class RecurringBillGeneratedNotification extends Notification
             'split_bill_id' => $this->splitBillId,
             'amount' => $this->amount,
             'due_date' => $this->dueDate,
-            'url' => route('finance.bills.show', $this->splitBillId),
+            'url' => '/api/split-bills/' . $this->splitBillId,
         ];
     }
 }
