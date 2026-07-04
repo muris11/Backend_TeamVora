@@ -52,7 +52,7 @@ class MediaController extends Controller
         $path = $file->storeAs(
             $request->type === 'gallery' ? 'gallery/' . date('Y/m') : 'documents',
             time() . '_' . $file->getClientOriginalName(),
-            's3'
+            'r2'
         );
 
         $media = TeamMedia::create([
@@ -76,14 +76,19 @@ class MediaController extends Controller
         }
 
         $path = $media->file_path;
-        // If stored as full URL, extract path
-        $s3Url = config('filesystems.disks.s3.url');
-        if ($s3Url && str_starts_with($path, $s3Url)) {
-            $path = str_replace($s3Url . '/', '', $path);
+        // Strip CDN domain prefix if file_path was stored as full URL
+        $r2Url = config('filesystems.disks.r2.url');
+        if ($r2Url && str_starts_with($path, $r2Url)) {
+            $path = ltrim(str_replace($r2Url, '', $path), '/');
         }
 
         if ($path) {
-            Storage::disk('s3')->delete($path);
+            try {
+                Storage::disk('r2')->delete($path);
+            } catch (\Throwable $e) {
+                // Log but don't block the delete if the file is already gone
+                logger()->warning('R2 delete failed for key [' . $path . ']: ' . $e->getMessage());
+            }
         }
 
         $media->delete();

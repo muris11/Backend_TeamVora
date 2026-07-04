@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 class TeamMediaResource extends JsonResource
 {
@@ -14,19 +13,16 @@ class TeamMediaResource extends JsonResource
         $url = null;
 
         if ($filePath) {
-            // If stored as full URL (old format), extract path
-            $s3Url = config('filesystems.disks.s3.url');
-            if ($s3Url && str_starts_with($filePath, $s3Url)) {
-                $filePath = str_replace($s3Url . '/', '', $filePath);
-            }
+            $cdnBase = rtrim(config('filesystems.disks.r2.url', 'https://' . env('R2_CUSTOM_DOMAIN')), '/');
 
-            // If stored as relative path, generate temporary URL
-            try {
-                $url = Storage::disk('s3')->temporaryUrl($filePath, now()->addHour());
-            } catch (\Exception $e) {
+
+            if (str_starts_with($filePath, 'https://') || str_starts_with($filePath, 'http://')) {
                 $url = $filePath;
+            } else {
+                $url = $cdnBase . '/' . ltrim($filePath, '/');
             }
         }
+
 
         return [
             'id' => $this->id,
