@@ -110,8 +110,12 @@ class TeamController extends Controller
         return response()->json(['message' => 'Tim berhasil dihapus.']);
     }
 
-    public function members(Team $team)
+    public function members(Request $request, Team $team)
     {
+        if (! $request->user()->isSuperAdmin() && $request->user()->team_id !== $team->id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $members = User::where('team_id', $team->id)
             ->with('roles')
             ->get();

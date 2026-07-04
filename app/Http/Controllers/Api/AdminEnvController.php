@@ -27,9 +27,10 @@ class AdminEnvController extends Controller
                 $key = trim($key);
                 $value = trim($value);
 
+                $isSensitive = $this->isSensitive($key);
                 $config[$key] = [
-                    'value' => $value,
-                    'masked' => false,
+                    'value' => $isSensitive ? '••••••••' : $value,
+                    'masked' => $isSensitive,
                     'line' => $index,
                 ];
             }
@@ -48,6 +49,14 @@ class AdminEnvController extends Controller
         $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
         foreach ($validated['settings'] as $key => $value) {
+            // Sanitize: key must be alphanumeric + underscore only
+            if (! preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
+                continue;
+            }
+
+            // Prevent newline injection in value
+            $value = str_replace(["\n", "\r"], '', $value);
+
             // Find the line with this key
             $found = false;
             foreach ($lines as &$line) {
@@ -73,6 +82,7 @@ class AdminEnvController extends Controller
 
         return response()->json(['message' => 'Konfigurasi .env berhasil diperbarui.']);
     }
+
 
     private function isSensitive(string $key): bool
     {

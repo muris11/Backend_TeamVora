@@ -27,7 +27,9 @@ class SplitBillController extends Controller
         $bills = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return SplitBillResource::collection($bills)->additional([
-            'users' => User::select('id', 'name')->get(),
+            'users' => User::select('id', 'name')
+                ->where('team_id', $request->user()->team_id)
+                ->get(),
         ]);
     }
 

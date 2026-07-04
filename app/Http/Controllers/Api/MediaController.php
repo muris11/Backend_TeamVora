@@ -7,6 +7,7 @@ use App\Http\Resources\TeamMediaResource;
 use App\Models\TeamMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class MediaController extends Controller
 {
@@ -45,8 +46,16 @@ class MediaController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:document,gallery',
-            'file' => 'required|file|max:10240',
+            'file' => [
+                'required', 'file', 'max:10240',
+                Rule::when(
+                    $request->type === 'gallery',
+                    ['mimes:jpeg,jpg,png,gif,webp,svg'],
+                    ['mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip']
+                ),
+            ],
         ]);
+
 
         $file = $request->file('file');
         $path = $file->storeAs(

@@ -17,10 +17,10 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('login', [AuthController::class, 'login']);
-Route::post('register', [AuthController::class, 'register']);
-Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('reset-password', [AuthController::class, 'resetPassword']);
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,10');
+Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
 // Public blog
 Route::get('blogs/public', [BlogController::class, 'index']);
@@ -35,7 +35,7 @@ use App\Http\Controllers\Api\AdminEnvController;
 use App\Http\Controllers\Api\AdminPlatformController;
 
 // Public contact form
-Route::post('contact', [ContactController::class, 'store']);
+Route::post('contact', [ContactController::class, 'store'])->middleware('throttle:3,1');
 
 // Public platform settings
 Route::get('platform-settings', [AdminPlatformController::class, 'getSettings']);
@@ -164,4 +164,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // SSE Stream (outside auth middleware - uses query token)
-Route::get('events/stream', [SseController::class, 'stream']);
+Route::get('events/stream', [SseController::class, 'stream'])->middleware('throttle:30,1');

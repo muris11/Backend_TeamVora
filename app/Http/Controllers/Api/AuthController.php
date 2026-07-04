@@ -146,10 +146,13 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
+        // Always return the same message to prevent email enumeration
+        $genericMessage = ['message' => 'Jika email terdaftar, link reset password telah dikirim.'];
+
         $user = User::where('email', $request->email)->first();
 
         if (! $user) {
-            return response()->json(['message' => 'Email tidak terdaftar.']);
+            return response()->json($genericMessage);
         }
 
         $token = Str::random(64);
@@ -162,7 +165,8 @@ class AuthController extends Controller
             ]
         );
 
-        $resetLink = 'http://localhost:3000/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+        $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
+        $resetLink = $frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
         $settings = DB::table('platform_settings')->where('key', 'general')->first();
         $emailSettings = DB::table('platform_settings')->where('key', 'email')->first();
@@ -187,7 +191,7 @@ class AuthController extends Controller
             }
         });
 
-        return response()->json(['message' => 'Link reset password telah dikirim ke email Anda.']);
+        return response()->json($genericMessage);
     }
 
     public function resetPassword(Request $request)
