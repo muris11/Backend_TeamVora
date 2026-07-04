@@ -12,10 +12,10 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // Spatie Roles (permission groups)
-        $adminRole = Role::firstOrCreate(['name' => 'Admin']);
-        $leadRole = Role::firstOrCreate(['name' => 'Lead']);
-        $memberRole = Role::firstOrCreate(['name' => 'Member']);
+        // Spatie Roles — names MUST match users.role column values (B0-1 fix)
+        $adminRole = Role::firstOrCreate(['name' => 'super_admin']);
+        $leadRole = Role::firstOrCreate(['name' => 'team_leader']);
+        $memberRole = Role::firstOrCreate(['name' => 'member']);
 
         // Permissions
         $features = [
@@ -28,6 +28,7 @@ class RoleSeeder extends Seeder
             'view_media', 'write_media',
             'view_blog', 'write_blog', 'manage_blog',
             'manage_rbac', 'manage_teams', 'manage_env', 'manage_email_templates',
+            'manage_members', 'manage_permissions',
         ];
 
         foreach ($features as $feature) {
@@ -39,13 +40,13 @@ class RoleSeeder extends Seeder
         $leadRole->syncPermissions([
             'view_dashboard',
             'view_cash_book', 'write_cash_book',
-            'view_split_bill', 'write_split_bill',
+            'view_split_bill', 'write_split_bill', 'verify_split_bill',
             'view_recurring_bill', 'write_recurring_bill',
             'view_tasks', 'write_tasks', 'update_task_status',
             'view_daily_log', 'write_daily_log',
             'view_media', 'write_media',
             'view_blog', 'write_blog', 'manage_blog',
-            'manage_teams',
+            'manage_teams', 'manage_members', 'manage_permissions',
         ]);
 
         $memberRole->syncPermissions([
@@ -57,6 +58,8 @@ class RoleSeeder extends Seeder
             'view_media', 'write_media',
             'view_blog',
         ]);
+
+
 
         // Super Admin (Owner)
         $admin = User::where('email', 'admin@teamvora.local')->first();

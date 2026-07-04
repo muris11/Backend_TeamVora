@@ -47,7 +47,7 @@ class BillItemController extends Controller
 
     public function verify(Request $request, BillItem $billItem)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasPermissionTo('verify_split_bill')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

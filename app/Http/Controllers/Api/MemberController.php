@@ -13,7 +13,7 @@ class MemberController extends Controller
 {
     public function index(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Lead'])) {
+        if (! $request->user()->hasPermissionTo('manage_members')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -26,7 +26,7 @@ class MemberController extends Controller
 
     public function updateRole(Request $request, User $user)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Lead'])) {
+        if (! $request->user()->hasPermissionTo('manage_members')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -36,13 +36,14 @@ class MemberController extends Controller
 
         $request->validate(['role' => 'required|exists:roles,name']);
         $user->syncRoles([$request->role]);
+        $user->update(['role' => $request->role]);
 
         return new UserResource($user->fresh()->load('roles'));
     }
 
     public function updatePermissions(Request $request, User $user)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Lead'])) {
+        if (! $request->user()->hasPermissionTo('manage_permissions')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -57,7 +58,7 @@ class MemberController extends Controller
 
     public function updateRolePermissions(Request $request, Role $role)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Lead'])) {
+        if (! $request->user()->hasPermissionTo('manage_permissions')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

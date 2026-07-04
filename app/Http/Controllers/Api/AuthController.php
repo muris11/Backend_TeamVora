@@ -65,9 +65,10 @@ class AuthController extends Controller
                 'role' => 'team_leader',
             ]);
 
-            $user->syncRoles('Lead');
+            $user->syncRoles('team_leader');
         } else {
-            $user->assignRole('Member');
+            $user->assignRole('member');
+            $user->update(['role' => 'member']);
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -163,13 +164,28 @@ class AuthController extends Controller
 
         $resetLink = 'http://localhost:3000/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
-        Mail::raw(
-            "Klik link berhasil untuk reset password Anda:\n\n{$resetLink}\n\nLink ini akan kedaluwarsa dalam 60 menit.\n\nJika Anda tidak meminta reset password, abaikan email ini.",
-            function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject('Reset Password TeamVora');
+        $settings = DB::table('platform_settings')->where('key', 'general')->first();
+        $emailSettings = DB::table('platform_settings')->where('key', 'email')->first();
+        
+        $settingsData = [];
+        if ($settings) {
+            $generalData = json_decode($settings->value, true);
+            $settingsData['email_logo_url'] = $generalData['logo_url'] ?? null;
+        }
+        if ($emailSettings) {
+            $emailData = json_decode($emailSettings->value, true);
+            $settingsData['email_sender_name'] = $emailData['email_sender_name'] ?? 'TeamVora';
+            $settingsData['email_reply_to'] = $emailData['email_reply_to'] ?? null;
+        }
+
+        Mail::send('emails.reset_password', ['resetLink' => $resetLink, 'settings' => $settingsData], function ($message) use ($user, $settingsData) {
+            $message->to($user->email)
+                ->subject('Reset Password TeamVora');
+            
+            if (!empty($settingsData['email_reply_to'])) {
+                $message->replyTo($settingsData['email_reply_to']);
             }
-        );
+        });
 
         return response()->json(['message' => 'Link reset password telah dikirim ke email Anda.']);
     }

@@ -20,7 +20,7 @@ class SplitBillController extends Controller
             $query->where('team_id', $request->user()->team_id);
         }
 
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasPermissionTo('write_split_bill')) {
             $query->whereHas('items', fn ($q) => $q->where('user_id', $request->user()->id));
         }
 
@@ -33,7 +33,7 @@ class SplitBillController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasPermissionTo('write_split_bill')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -80,15 +80,19 @@ class SplitBillController extends Controller
         }
     }
 
-    public function show(SplitBill $splitBill)
+    public function show(Request $request, SplitBill $splitBill)
     {
+        $user = $request->user();
+        if (! $user->isSuperAdmin() && $splitBill->team_id !== $user->team_id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
         $splitBill->load(['creator:id,name', 'items.user:id,name', 'items.verifier:id,name']);
         return new SplitBillResource($splitBill);
     }
 
     public function update(Request $request, SplitBill $splitBill)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasPermissionTo('write_split_bill')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -105,7 +109,7 @@ class SplitBillController extends Controller
 
     public function destroy(Request $request, SplitBill $splitBill)
     {
-        if (! $request->user()->hasAnyRole(['Admin', 'Treasurer'])) {
+        if (! $request->user()->hasPermissionTo('write_split_bill')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

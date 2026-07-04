@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class AdminPlatformController extends Controller
 {
@@ -43,7 +44,11 @@ class AdminPlatformController extends Controller
             'general' => ['site_name', 'tagline', 'favicon_url', 'logo_url'],
             'contact' => ['contact_email', 'support_email', 'phone', 'address', 'office_hours'],
             'social'  => ['twitter_url', 'linkedin_url'],
-            'seo'     => ['seo_title', 'seo_description', 'seo_keywords'],
+            'seo'     => [
+                'seo_title', 'seo_description', 'seo_keywords',
+                'og_image_url', 'canonical_url', 'twitter_handle',
+                'theme_color', 'robots_meta'
+            ],
             'marketing' => [
                 'hero_title', 'hero_subtitle', 'hero_cta_text', 'hero_cta_link',
                 'features_title', 'features', 'testimonials_title', 'testimonials',
@@ -122,7 +127,7 @@ class AdminPlatformController extends Controller
         ];
     }
 
-    private function formatBytes($bytes, $precision = 2)
+    private function formatBytes(int|float $bytes, int $precision = 2): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $bytes = max($bytes, 0);
@@ -130,5 +135,37 @@ class AdminPlatformController extends Controller
         $pow = min($pow, count($units) - 1);
         $bytes /= pow(1024, $pow);
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    public function testEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $settings = Setting::all()->groupBy('group')
+            ->map(fn ($items) => $items->pluck('value', 'key'));
+            
+        $settingsData = [];
+        $settingsData['email_logo_url'] = $settings['general']['logo_url'] ?? null;
+        $settingsData['email_sender_name'] = $settings['email']['email_sender_name'] ?? 'TeamVora';
+        $settingsData['email_reply_to'] = $settings['email']['email_reply_to'] ?? null;
+
+        try {
+            Mail::send('emails.test', ['settings' => $settingsData], function ($message) use ($request, $settingsData) {
+                $message->to($request->email)
+                    ->subject('Test Email TeamVora');
+                
+                if (!empty($settingsData['email_reply_to'])) {
+                    $message->replyTo($settingsData['email_reply_to']);
+                }
+            });
+
+            return response()->json(['message' => 'Email tes berhasil dikirim ke ' . $request->email]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengirim email tes: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

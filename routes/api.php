@@ -154,6 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Platform Settings (super_admin only)
         Route::get('admin/platform-settings', [AdminPlatformController::class, 'getSettings']);
         Route::put('admin/platform-settings', [AdminPlatformController::class, 'updateSettings']);
+        Route::post('admin/platform-settings/test-email', [AdminPlatformController::class, 'testEmail']);
         Route::get('admin/system-status', [AdminPlatformController::class, 'getSystemStatus']);
 
         // .env Config (super_admin only)
