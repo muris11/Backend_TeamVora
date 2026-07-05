@@ -270,8 +270,11 @@ class TeamController extends Controller
             'r2'
         );
 
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = \Illuminate\Support\Facades\Storage::disk('r2');
+
         $team->update([
-            'logo_url' => \Illuminate\Support\Facades\Storage::disk('r2')->url($path),
+            'logo_url' => $disk->url($path),
         ]);
 
         return new TeamResource($team);

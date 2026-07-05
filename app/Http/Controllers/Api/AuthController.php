@@ -254,7 +254,7 @@ class AuthController extends Controller
      * Impersonate a user — creates a new token with impersonator_id in abilities.
      * Only Super Admin can impersonate.
      */
-    public function impersonate(Request $request, $userId)
+    public function impersonate(Request $request, int|string $userId)
     {
         if (! $request->user()->isSuperAdmin()) {
             return response()->json(['message' => 'Unauthorized.'], 403);

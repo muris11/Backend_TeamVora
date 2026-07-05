@@ -61,7 +61,9 @@ class BlogController extends Controller
                 time() . '_' . $file->getClientOriginalName(),
                 'r2'
             );
-            $validated['featured_image'] = Storage::disk('r2')->url($path);
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = Storage::disk('r2');
+            $validated['featured_image'] = $disk->url($path);
         }
 
         unset($validated['featured_image_raw']);
@@ -127,7 +129,9 @@ class BlogController extends Controller
                 time() . '_' . $file->getClientOriginalName(),
                 'r2'
             );
-            $validated['featured_image'] = Storage::disk('r2')->url($path);
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = Storage::disk('r2');
+            $validated['featured_image'] = $disk->url($path);
         }
 
         if (isset($validated['status']) && $validated['status'] === 'published' && empty($blog->published_at)) {
