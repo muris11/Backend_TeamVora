@@ -134,17 +134,23 @@ class AuthController extends Controller
 
         $file = $request->file('avatar');
         $filename = time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs('avatars', $filename, 'public');
+        $path = $file->storeAs('gallery/avatars/' . date('Y/m'), $filename, 'r2');
 
         $user = $request->user();
         
-        // Delete old avatar if exists and not an external URL
-        if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
-            $oldPath = str_replace(asset('storage/'), '', $user->avatar_url);
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
-        }
+        // Add to TeamMedia gallery
+        \App\Models\TeamMedia::create([
+            'user_id' => $user->id,
+            'team_id' => $user->team_id,
+            'type' => 'gallery',
+            'name' => 'Avatar - ' . $user->name,
+            'file_path' => $path,
+            'size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+        ]);
 
-        $avatarUrl = asset('storage/' . $path);
+        $cdnBase = rtrim(config('filesystems.disks.r2.url', 'https://' . env('R2_CUSTOM_DOMAIN')), '/');
+        $avatarUrl = $cdnBase . '/' . ltrim($path, '/');
         
         $user->update([
             'avatar_url' => $avatarUrl,

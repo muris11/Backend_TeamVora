@@ -5,12 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\StreamedResponse;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class SseController extends Controller
 {
-    public function stream(Request $request): StreamedResponse
+    public function stream(Request $request)
     {
         // Auth via query string token (EventSource doesn't support custom headers)
         $token = $request->query('token');
