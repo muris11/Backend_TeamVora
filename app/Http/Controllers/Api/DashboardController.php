@@ -12,20 +12,24 @@ class DashboardController extends Controller
 {
     public function stats(Request $request)
     {
-        $cashIn = CashBook::where('type', 'in')->sum('amount');
-        $cashOut = CashBook::where('type', 'out')->sum('amount');
+        $user = $request->user();
+
+        $cashIn = CashBook::where('team_id', $user->team_id)->where('type', 'in')->sum('amount');
+        $cashOut = CashBook::where('team_id', $user->team_id)->where('type', 'out')->sum('amount');
         $currentBalance = $cashIn - $cashOut;
-        $monthlyExpense = CashBook::where('type', 'out')
+        $monthlyExpense = CashBook::where('team_id', $user->team_id)
+            ->where('type', 'out')
             ->whereMonth('date', date('m'))
             ->whereYear('date', date('Y'))
             ->sum('amount');
 
-        $unpaidBills = BillItem::with('bill:id,title,due_date')
-            ->where('user_id', $request->user()->id)
+        $unpaidBills = BillItem::with(['bill:id,title,due_date', 'user:id,name'])
+            ->where('user_id', $user->id)
             ->where('status', 'unpaid')
             ->get();
 
-        $activeTasks = Task::where('assignee_id', $request->user()->id)
+        $activeTasks = Task::with('assignee:id,name')
+            ->where('team_id', $user->team_id)
             ->whereIn('status', ['todo', 'in_progress'])
             ->orderBy('due_date', 'asc')
             ->take(5)
@@ -59,7 +63,8 @@ class DashboardController extends Controller
             ->where('status', 'unpaid')
             ->get();
 
-        $activeTasks = Task::where('assignee_id', $user->id)
+        $activeTasks = Task::with('assignee:id,name')
+            ->where('assignee_id', $user->id)
             ->whereIn('status', ['todo', 'in_progress'])
             ->orderBy('due_date', 'asc')
             ->take(5)

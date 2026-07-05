@@ -24,7 +24,7 @@ Route::post('reset-password', [AuthController::class, 'resetPassword'])->middlew
 
 // Public blog
 Route::get('blogs/public', [BlogController::class, 'index']);
-Route::get('blogs/{slug}', [BlogController::class, 'show']);
+Route::get('blogs/{slug}', [BlogController::class, 'show'])->where('slug', '^(?!manage$).*');
 
 // Invitation accept (public)
 Route::get('invitations/{token}/accept', [TeamInvitationController::class, 'accept']);
