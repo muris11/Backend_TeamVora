@@ -31,15 +31,27 @@ class Blog extends Model
     {
         static::creating(function (Blog $blog) {
             if (empty($blog->slug)) {
-                $blog->slug = Str::slug($blog->title);
+                $blog->slug = static::generateUniqueSlug($blog->title);
             }
         });
 
         static::updating(function (Blog $blog) {
             if ($blog->isDirty('title') && !$blog->isDirty('slug')) {
-                $blog->slug = Str::slug($blog->title);
+                $blog->slug = static::generateUniqueSlug($blog->title, $blog->id);
             }
         });
+    }
+
+    public static function generateUniqueSlug($title, $ignoreId = 0)
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $count = 1;
+        while (static::where('slug', $slug)->where('id', '!=', $ignoreId)->exists()) {
+            $slug = $originalSlug . '-' . $count;
+            $count++;
+        }
+        return $slug;
     }
 
     public function team(): BelongsTo
