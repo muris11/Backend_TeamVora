@@ -56,6 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('stop-impersonation', [AuthController::class, 'stopImpersonation']);
 
     // Teams
+    Route::put('teams/settings', [TeamController::class, 'updateSettings']);
+    Route::post('teams/logo', [TeamController::class, 'uploadLogo']);
     Route::apiResource('teams', TeamController::class);
     Route::get('teams/{team}/members', [TeamController::class, 'members']);
     Route::post('teams/{team}/invite', [TeamController::class, 'invite']);
@@ -197,4 +199,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // SSE Stream (outside auth middleware - uses query token)
-Route::get('events/stream', [SseController::class, 'stream'])->middleware('throttle:30,1');
+Route::get('events/stream', [SseController::class, 'stream'])->middleware('throttle:300,1');

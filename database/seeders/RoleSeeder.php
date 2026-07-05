@@ -51,8 +51,8 @@ class RoleSeeder extends Seeder
 
         $memberRole->syncPermissions([
             'view_dashboard',
-            'view_cash_book',
-            'view_split_bill', 'pay_split_bill',
+            'view_cash_book', 'write_cash_book',
+            'view_split_bill', 'write_split_bill', 'pay_split_bill',
             'view_tasks', 'update_task_status',
             'view_daily_log', 'write_daily_log',
             'view_media', 'write_media',

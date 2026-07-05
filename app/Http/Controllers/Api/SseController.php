@@ -102,11 +102,6 @@ class SseController extends Controller
             'Cache-Control' => 'no-cache, no-transform',
             'Connection' => 'keep-alive',
             'X-Accel-Buffering' => 'no',
-            'Access-Control-Allow-Origin' => '*',
-            'Access-Control-Allow-Methods' => 'GET, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Requested-With',
-            'Access-Control-Allow-Credentials' => 'true',
-            'Access-Control-Expose-Headers' => '*',
         ]);
     }
 

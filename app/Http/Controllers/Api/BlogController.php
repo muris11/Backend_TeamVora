@@ -14,7 +14,13 @@ class BlogController extends Controller
 {
     public function index()
     {
-        $blogs = Blog::where('status', 'published')
+        $blogs = Blog::where(function ($query) {
+                $query->where('status', 'published')
+                      ->orWhere(function ($q) {
+                          $q->where('status', 'scheduled')
+                            ->where('published_at', '<=', now());
+                      });
+            })
             ->with('author:id,name,avatar_path')
             ->orderBy('published_at', 'desc')
             ->paginate(12);
@@ -28,32 +34,44 @@ class BlogController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        $validated = $request->validate([
+        $rules = [
             'title' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'content' => 'required|string',
-            'status' => 'sometimes|in:draft,published',
-            'featured_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240',
+            'status' => 'sometimes|in:draft,published,scheduled',
             'published_at' => 'nullable|date',
-        ]);
+        ];
+
+        if ($request->hasFile('featured_image')) {
+            $rules['featured_image'] = 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240';
+        } else {
+            $rules['featured_image'] = 'nullable|string';
+        }
+
+        $validated = $request->validate($rules);
 
         $validated['author_id'] = $request->user()->id;
         $validated['team_id'] = $request->user()->team_id;
 
         if ($request->hasFile('featured_image')) {
             $file = $request->file('featured_image');
+            $teamStr = $request->user()->team ? $request->user()->team->slug : 'superadmin';
             $path = $file->storeAs(
-                'blog/' . date('Y/m'),
+                $teamStr . '/blog/' . date('Y/m'),
                 time() . '_' . $file->getClientOriginalName(),
-                's3'
+                'r2'
             );
-            $validated['featured_image'] = Storage::disk('s3')->url($path);
+            $validated['featured_image'] = Storage::disk('r2')->url($path);
         }
 
         unset($validated['featured_image_raw']);
 
         if (($validated['status'] ?? 'draft') === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = now();
+        } else if (($validated['status'] ?? 'draft') === 'scheduled' && empty($validated['published_at'])) {
+            // If scheduled but no date provided, default to now or keep it draft.
+            // Best to throw validation error but since it passed, we will set it to draft
+            $validated['status'] = 'draft';
         }
 
         $blog = Blog::create($validated);
@@ -63,7 +81,15 @@ class BlogController extends Controller
 
     public function show(string $slugOrId)
     {
-        $query = Blog::with('author:id,name,avatar_path');
+        $query = Blog::with('author:id,name,avatar_path')
+            ->where(function ($q) {
+                $q->where('status', 'published')
+                  ->orWhere(function ($q2) {
+                      $q2->where('status', 'scheduled')
+                         ->where('published_at', '<=', now());
+                  });
+            });
+
         $blog = is_numeric($slugOrId)
             ? $query->findOrFail($slugOrId)
             : $query->where('slug', $slugOrId)->firstOrFail();
@@ -77,27 +103,37 @@ class BlogController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        $validated = $request->validate([
+        $rules = [
             'title' => 'sometimes|string|max:255',
             'excerpt' => 'nullable|string',
             'content' => 'sometimes|string',
-            'status' => 'sometimes|in:draft,published',
-            'featured_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240',
+            'status' => 'sometimes|in:draft,published,scheduled',
             'published_at' => 'nullable|date',
-        ]);
+        ];
+
+        if ($request->hasFile('featured_image')) {
+            $rules['featured_image'] = 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240';
+        } else {
+            $rules['featured_image'] = 'nullable|string';
+        }
+
+        $validated = $request->validate($rules);
 
         if ($request->hasFile('featured_image')) {
             $file = $request->file('featured_image');
+            $teamStr = $request->user()->team ? $request->user()->team->slug : 'superadmin';
             $path = $file->storeAs(
-                'blog/' . date('Y/m'),
+                $teamStr . '/blog/' . date('Y/m'),
                 time() . '_' . $file->getClientOriginalName(),
-                's3'
+                'r2'
             );
-            $validated['featured_image'] = Storage::disk('s3')->url($path);
+            $validated['featured_image'] = Storage::disk('r2')->url($path);
         }
 
         if (isset($validated['status']) && $validated['status'] === 'published' && empty($blog->published_at)) {
             $validated['published_at'] = now();
+        } else if (isset($validated['status']) && $validated['status'] === 'scheduled' && empty($validated['published_at']) && empty($blog->published_at)) {
+            $validated['status'] = 'draft';
         }
 
         $blog->update($validated);

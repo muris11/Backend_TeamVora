@@ -226,4 +226,54 @@ class TeamController extends Controller
 
         return new UserResource($user->fresh()->load('roles'));
     }
+
+    public function updateSettings(Request $request)
+    {
+        if (! $request->user()->isTeamLeader() && ! $request->user()->isSuperAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $team = $request->user()->team;
+        if (! $team) {
+            return response()->json(['message' => 'Team not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $team->update($validated);
+
+        return new TeamResource($team);
+    }
+
+    public function uploadLogo(Request $request)
+    {
+        if (! $request->user()->isTeamLeader() && ! $request->user()->isSuperAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $team = $request->user()->team;
+        if (! $team) {
+            return response()->json(['message' => 'Team not found.'], 404);
+        }
+
+        $request->validate([
+            'logo' => 'required|image|mimes:jpg,jpeg,png,svg,webp|max:5120',
+        ]);
+
+        $file = $request->file('logo');
+        $path = $file->storeAs(
+            $team->slug . '/logo',
+            time() . '_' . $file->getClientOriginalName(),
+            'r2'
+        );
+
+        $team->update([
+            'logo_url' => \Illuminate\Support\Facades\Storage::disk('r2')->url($path),
+        ]);
+
+        return new TeamResource($team);
+    }
 }

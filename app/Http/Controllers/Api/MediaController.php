@@ -58,8 +58,10 @@ class MediaController extends Controller
 
 
         $file = $request->file('file');
+        $teamStr = $request->user()->team ? $request->user()->team->slug : 'superadmin';
+        $subFolder = $request->type === 'gallery' ? 'gallery/' . date('Y/m') : 'documents';
         $path = $file->storeAs(
-            $request->type === 'gallery' ? 'gallery/' . date('Y/m') : 'documents',
+            $teamStr . '/' . $subFolder,
             time() . '_' . $file->getClientOriginalName(),
             'r2'
         );
@@ -94,6 +96,11 @@ class MediaController extends Controller
         if ($path) {
             try {
                 Storage::disk('r2')->delete($path);
+
+                // If this media is an avatar, nullify it for any users using it
+                $cdnBase = rtrim(config('filesystems.disks.r2.url', 'https://' . env('R2_CUSTOM_DOMAIN')), '/');
+                $avatarUrl = $cdnBase . '/' . ltrim($path, '/');
+                \App\Models\User::where('avatar_path', $avatarUrl)->update(['avatar_path' => null]);
             } catch (\Throwable $e) {
                 // Log but don't block the delete if the file is already gone
                 logger()->warning('R2 delete failed for key [' . $path . ']: ' . $e->getMessage());

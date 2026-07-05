@@ -43,7 +43,7 @@ class CashBookController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['super_admin', 'team_leader'])) {
+        if (! $request->user()->hasPermissionTo('write_cash_book')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
