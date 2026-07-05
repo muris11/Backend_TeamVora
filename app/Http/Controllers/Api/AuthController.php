@@ -122,7 +122,7 @@ class AuthController extends Controller
             'avatar_url' => 'nullable|string|url',
         ]);
 
-        $request->user()->update($request->only('name', 'email', 'phone', 'avatar_url'));
+        $request->user()->update($request->only('name', 'email', 'phone', 'avatar_path'));
 
         return new UserResource($request->user()->fresh()->load('roles', 'team'));
     }
@@ -153,7 +153,7 @@ class AuthController extends Controller
         $avatarUrl = $cdnBase . '/' . ltrim($path, '/');
         
         $user->update([
-            'avatar_url' => $avatarUrl,
+            'avatar_path' => $avatarUrl,
         ]);
 
         return new UserResource($user->fresh()->load('roles', 'team'));
