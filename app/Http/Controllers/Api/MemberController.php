@@ -13,7 +13,7 @@ class MemberController extends Controller
 {
     public function index(Request $request)
     {
-        if (! $request->user()->hasPermissionTo('manage_members')) {
+        if (! $request->user()->isSuperAdmin() && ! $request->user()->hasPermissionTo('manage_members')) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

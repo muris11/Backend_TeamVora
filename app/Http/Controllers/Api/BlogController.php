@@ -7,6 +7,7 @@ use App\Http\Resources\BlogResource;
 use App\Models\Blog;
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class BlogController extends Controller
@@ -32,12 +33,24 @@ class BlogController extends Controller
             'excerpt' => 'nullable|string',
             'content' => 'required|string',
             'status' => 'sometimes|in:draft,published',
-            'featured_image' => 'nullable|string|max:255',
+            'featured_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240',
             'published_at' => 'nullable|date',
         ]);
 
         $validated['author_id'] = $request->user()->id;
         $validated['team_id'] = $request->user()->team_id;
+
+        if ($request->hasFile('featured_image')) {
+            $file = $request->file('featured_image');
+            $path = $file->storeAs(
+                'blog/' . date('Y/m'),
+                time() . '_' . $file->getClientOriginalName(),
+                's3'
+            );
+            $validated['featured_image'] = Storage::disk('s3')->url($path);
+        }
+
+        unset($validated['featured_image_raw']);
 
         if (($validated['status'] ?? 'draft') === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = now();
@@ -69,9 +82,19 @@ class BlogController extends Controller
             'excerpt' => 'nullable|string',
             'content' => 'sometimes|string',
             'status' => 'sometimes|in:draft,published',
-            'featured_image' => 'nullable|string|max:255',
+            'featured_image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240',
             'published_at' => 'nullable|date',
         ]);
+
+        if ($request->hasFile('featured_image')) {
+            $file = $request->file('featured_image');
+            $path = $file->storeAs(
+                'blog/' . date('Y/m'),
+                time() . '_' . $file->getClientOriginalName(),
+                's3'
+            );
+            $validated['featured_image'] = Storage::disk('s3')->url($path);
+        }
 
         if (isset($validated['status']) && $validated['status'] === 'published' && empty($blog->published_at)) {
             $validated['published_at'] = now();
@@ -97,11 +120,15 @@ class BlogController extends Controller
     {
         $user = $request->user();
 
-        $blogs = Blog::where('team_id', $user->team_id)
-            ->with('author:id,name,avatar_path')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = Blog::with('author:id,name,avatar_path');
 
-        return BlogResource::collection($blogs);
+        if ($user->isSuperAdmin()) {
+            $query->orderBy('created_at', 'desc');
+        } else {
+            $query->where('team_id', $user->team_id)
+                ->orderBy('created_at', 'desc');
+        }
+
+        return BlogResource::collection($query->paginate(15));
     }
 }
