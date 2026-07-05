@@ -8,9 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class TeamInvitationNotification extends Notification implements ShouldQueue
+class TeamInvitationNotification extends Notification
 {
-    use Queueable;
 
     public TeamInvitation $invitation;
 

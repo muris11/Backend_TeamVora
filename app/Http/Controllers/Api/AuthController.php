@@ -119,11 +119,38 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $request->user()->id,
             'phone' => 'nullable|string|max:20',
+            'avatar_url' => 'nullable|string|url',
         ]);
 
-        $request->user()->update($request->only('name', 'email', 'phone'));
+        $request->user()->update($request->only('name', 'email', 'phone', 'avatar_url'));
 
         return new UserResource($request->user()->fresh()->load('roles', 'team'));
+    }
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|max:2048',
+        ]);
+
+        $file = $request->file('avatar');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('avatars', $filename, 'public');
+
+        $user = $request->user();
+        
+        // Delete old avatar if exists and not an external URL
+        if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
+            $oldPath = str_replace(asset('storage/'), '', $user->avatar_url);
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+        }
+
+        $avatarUrl = asset('storage/' . $path);
+        
+        $user->update([
+            'avatar_url' => $avatarUrl,
+        ]);
+
+        return new UserResource($user->fresh()->load('roles', 'team'));
     }
 
     public function updatePassword(Request $request)
@@ -168,19 +195,13 @@ class AuthController extends Controller
         $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
         $resetLink = $frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
-        $settings = DB::table('platform_settings')->where('key', 'general')->first();
-        $emailSettings = DB::table('platform_settings')->where('key', 'email')->first();
+        $settings = \App\Models\Setting::all()->groupBy('group')
+            ->map(fn ($items) => $items->pluck('value', 'key'));
         
         $settingsData = [];
-        if ($settings) {
-            $generalData = json_decode($settings->value, true);
-            $settingsData['email_logo_url'] = $generalData['logo_url'] ?? null;
-        }
-        if ($emailSettings) {
-            $emailData = json_decode($emailSettings->value, true);
-            $settingsData['email_sender_name'] = $emailData['email_sender_name'] ?? 'TeamVora';
-            $settingsData['email_reply_to'] = $emailData['email_reply_to'] ?? null;
-        }
+        $settingsData['email_logo_url'] = $settings['general']['logo_url'] ?? null;
+        $settingsData['email_sender_name'] = $settings['email']['email_sender_name'] ?? 'TeamVora';
+        $settingsData['email_reply_to'] = $settings['email']['email_reply_to'] ?? null;
 
         Mail::send('emails.reset_password', ['resetLink' => $resetLink, 'settings' => $settingsData], function ($message) use ($user, $settingsData) {
             $message->to($user->email)

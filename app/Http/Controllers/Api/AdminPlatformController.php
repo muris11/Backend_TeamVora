@@ -44,6 +44,10 @@ class AdminPlatformController extends Controller
             'general' => ['site_name', 'tagline', 'favicon_url', 'logo_url'],
             'contact' => ['contact_email', 'support_email', 'phone', 'address', 'office_hours'],
             'social'  => ['twitter_url', 'linkedin_url'],
+            'email'   => [
+                'email_logo_url', 'email_sender_name', 'email_reply_to', 
+                'email_button_color', 'email_footer_text', 'email_primary_color'
+            ],
             'seo'     => [
                 'seo_title', 'seo_description', 'seo_keywords',
                 'og_image_url', 'canonical_url', 'twitter_handle',
