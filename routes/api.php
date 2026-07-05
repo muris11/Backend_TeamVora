@@ -28,6 +28,7 @@ Route::get('blogs/{slug}', [BlogController::class, 'show']);
 
 // Invitation accept (public)
 Route::get('invitations/{token}/accept', [TeamInvitationController::class, 'accept']);
+Route::get('invitations/{token}', [TeamInvitationController::class, 'show']);
 
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ContactController;
@@ -60,9 +61,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('teams/{team}/members/{user}', [TeamController::class, 'removeMember']);
     Route::post('teams/switch', [TeamController::class, 'switchTeam']);
 
+    // Team members shortcut (for member/lead pages that don't have team_id in URL)
+    Route::get('team-members', function (\Illuminate\Http\Request $request) {
+        $user = $request->user();
+        if (! $user->team_id) {
+            return \App\Http\Resources\UserResource::collection(collect());
+        }
+        $members = \App\Models\User::where('team_id', $user->team_id)->with('roles')->get();
+        return \App\Http\Resources\UserResource::collection($members);
+    });
+    Route::get('team/members', function (\Illuminate\Http\Request $request) {
+        $user = $request->user();
+        if (! $user->team_id) {
+            return \App\Http\Resources\UserResource::collection(collect());
+        }
+        $members = \App\Models\User::where('team_id', $user->team_id)->with('roles')->get();
+        return \App\Http\Resources\UserResource::collection($members);
+    });
+
     // Dashboard
     Route::get('dashboard/stats', [DashboardController::class, 'stats']);
-    Route::get('/dashboard/member', [DashboardController::class, 'member']);
+    Route::get('dashboard/member', [DashboardController::class, 'member']);
 
     // Email Settings (Superadmin only)
     Route::middleware([\App\Http\Middleware\CheckRole::class.':super_admin'])->group(function () {
@@ -157,6 +176,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('admin/platform-settings', [AdminPlatformController::class, 'updateSettings']);
         Route::post('admin/platform-settings/test-email', [AdminPlatformController::class, 'testEmail']);
         Route::get('admin/system-status', [AdminPlatformController::class, 'getSystemStatus']);
+
+        // Admin stats
+        Route::get('admin/stats', function () {
+            return response()->json([
+                'data' => [
+                    'teams_count' => \App\Models\Team::count(),
+                    'users_count' => \App\Models\User::count(),
+                    'blogs_count' => \App\Models\Blog::count(),
+                    'recent_activity' => \Spatie\Activitylog\Models\Activity::latest()->take(10)->get(),
+                ],
+            ]);
+        });
 
         // .env Config (super_admin only)
         Route::get('admin/env-config', [AdminEnvController::class, 'index']);

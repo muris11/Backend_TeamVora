@@ -97,4 +97,13 @@ class TeamInvitationController extends Controller
 
         return TeamInvitationResource::collection($invitations);
     }
+
+    public function show(string $token)
+    {
+        $invitation = TeamInvitation::where('token', $token)
+            ->with('team:id,name,slug', 'inviter:id,name,email')
+            ->firstOrFail();
+
+        return new TeamInvitationResource($invitation);
+    }
 }

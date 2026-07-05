@@ -48,11 +48,12 @@ class BlogController extends Controller
         return new BlogResource($blog->load('author:id,name,avatar_path'));
     }
 
-    public function show(string $slug)
+    public function show(string $slugOrId)
     {
-        $blog = Blog::where('slug', $slug)
-            ->with('author:id,name,avatar_path')
-            ->firstOrFail();
+        $query = Blog::with('author:id,name,avatar_path');
+        $blog = is_numeric($slugOrId)
+            ? $query->findOrFail($slugOrId)
+            : $query->where('slug', $slugOrId)->firstOrFail();
 
         return new BlogResource($blog);
     }
