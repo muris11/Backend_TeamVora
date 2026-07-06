@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\EmailSetting;
+use App\Models\Team;
+use App\Models\TeamInvitation;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Support\Facades\Mail;
@@ -36,8 +39,10 @@ class EmailTemplateController extends Controller
         $settings = EmailSetting::first() ?? new EmailSetting();
 
         if ($request->hasFile('logo')) {
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
+            $r2Disk = Storage::disk('r2');
             $path = $request->file('logo')->store('email-logos', 'r2');
-            $settings->logo_url = Storage::disk('r2')->url($path);
+            $settings->logo_url = $r2Disk->url($path);
         }
 
         if ($request->has('primary_color')) {
@@ -58,8 +63,17 @@ class EmailTemplateController extends Controller
 
     public function getPreview()
     {
-        // Generate a fake notification html preview
-        $notification = new TeamInvitationNotification('Preview Team', 'superadmin', 'http://localhost:3000/invite/preview');
+        // Generate a fake notification html preview using a mock invitation
+        $invitation = new \App\Models\TeamInvitation([
+            'token' => 'preview-token',
+            'email' => 'preview@example.com',
+            'role' => 'member',
+            'expires_at' => now()->addDays(7),
+        ]);
+        $invitation->team = auth()->user()?->team ?? new \App\Models\Team(['name' => 'Preview Team']);
+        $invitation->invitedBy = auth()->user() ?? new \App\Models\User(['name' => 'Admin']);
+
+        $notification = new TeamInvitationNotification($invitation);
         $message = $notification->toMail(auth()->user() ?? new \App\Models\User());
         
         $html = $message->render();

@@ -32,9 +32,12 @@ class BillItemController extends Controller
                 'r2'
             );
 
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
+            $r2Disk = Storage::disk('r2');
+
             $billItem->update([
                 'status' => 'pending_verification',
-                'proof_path' => Storage::disk('r2')->url($path),
+                'proof_path' => $r2Disk->url($path),
             ]);
 
             $billItem->splitBill->creator->notify(new ProofUploadedNotification($billItem, $request->user()));

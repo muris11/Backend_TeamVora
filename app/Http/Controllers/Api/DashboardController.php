@@ -110,7 +110,7 @@ class DashboardController extends Controller
             'chart_data' => $chartData,
         ]);
     }
-    private function getChartData($teamId, $userId, $isLead = false)
+    private function getChartData(int $teamId, int $userId, bool $isLead = false)
     {
         $cashFlowData = [];
         for ($i = 5; $i >= 0; $i--) {
