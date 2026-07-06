@@ -19,9 +19,22 @@
 @endisset
 
 @php
-    $emailSetting = \App\Models\EmailSetting::first();
-    $primaryColor = $emailSetting && $emailSetting->primary_color ? $emailSetting->primary_color : '#0284c7';
-    $footerText = $emailSetting && $emailSetting->footer_text ? $emailSetting->footer_text : '© ' . date('Y') . ' ' . config('app.name') . '. ' . __('All rights reserved.');
+    $settings = \App\Models\Setting::getByGroup('email');
+    
+    $colorMap = [
+        'blue' => '#3b82f6', 'sky' => '#0ea5e9', 'indigo' => '#6366f1',
+        'violet' => '#8b5cf6', 'purple' => '#a855f7', 'fuchsia' => '#d946ef',
+        'pink' => '#ec4899', 'rose' => '#f43f5e', 'red' => '#ef4444',
+        'orange' => '#f97316', 'amber' => '#f59e0b', 'yellow' => '#eab308',
+        'lime' => '#84cc16', 'green' => '#22c55e', 'emerald' => '#10b981',
+        'teal' => '#14b8a6', 'cyan' => '#06b6d4', 'slate' => '#64748b',
+        'gray' => '#6b7280', 'zinc' => '#71717a', 'primary' => '#0f172a'
+    ];
+    
+    $rawColor = $settings['email_button_color'] ?? ($settings['email_primary_color'] ?? 'blue');
+    $primaryColor = $colorMap[$rawColor] ?? (str_starts_with($rawColor, '#') ? $rawColor : '#3b82f6');
+    
+    $footerText = $settings['email_footer_text'] ?? '© ' . date('Y') . ' ' . config('app.name') . '. Hak Cipta Dilindungi.';
 @endphp
 <style>
     .button-primary { background-color: {{ $primaryColor }} !important; border-color: {{ $primaryColor }} !important; color: #ffffff !important; }

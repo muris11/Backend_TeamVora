@@ -72,7 +72,7 @@ class TeamInvitationController extends Controller
             $user = User::create([
                 'name' => $name,
                 'email' => $invitation->email,
-                'password' => Hash::make($request->password),
+                'password' => $request->password,
                 'role' => 'member',
             ]);
             $user->assignRole('member');
