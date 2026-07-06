@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\EmailSetting;
 use App\Models\Team;
 use App\Models\TeamInvitation;
@@ -63,19 +64,22 @@ class EmailTemplateController extends Controller
 
     public function getPreview()
     {
+        /** @var User|null $authUser */
+        $authUser = Auth::user();
+
         // Generate a fake notification html preview using a mock invitation
-        $invitation = new \App\Models\TeamInvitation([
+        $invitation = new TeamInvitation([
             'token' => 'preview-token',
             'email' => 'preview@example.com',
             'role' => 'member',
             'expires_at' => now()->addDays(7),
         ]);
-        $invitation->team = auth()->user()?->team ?? new \App\Models\Team(['name' => 'Preview Team']);
-        $invitation->invitedBy = auth()->user() ?? new \App\Models\User(['name' => 'Admin']);
+        $invitation->team = $authUser?->team ?? new Team(['name' => 'Preview Team']);
+        $invitation->invitedBy = $authUser ?? new User(['name' => 'Admin']);
 
         $notification = new TeamInvitationNotification($invitation);
-        $message = $notification->toMail(auth()->user() ?? new \App\Models\User());
-        
+        $message = $notification->toMail($authUser ?? new User());
+
         $html = $message->render();
 
         return response($html)->header('Content-Type', 'text/html');
