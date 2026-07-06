@@ -32,10 +32,16 @@ class SseController extends Controller
         $activeUsersKey = 'sse_active_users';
         $userId = (string) $user->id;
 
-        // Add user to active set
-        $activeUsers = Cache::get($activeUsersKey, []);
-        $activeUsers[$userId] = now()->timestamp;
-        Cache::put($activeUsersKey, $activeUsers, 35);
+        // Add user to active set (atomic via lock)
+        $lock = Cache::lock('sse_active_users_lock', 5);
+        $lock->block(3);
+        try {
+            $activeUsers = Cache::get($activeUsersKey, []);
+            $activeUsers[$userId] = now()->timestamp;
+            Cache::put($activeUsersKey, $activeUsers, 35);
+        } finally {
+            $lock->force();
+        }
 
         return response()->stream(function () use ($user, $isSuperAdmin, $activeUsersKey, $userId) {
             // Send initial connection event
@@ -58,9 +64,15 @@ class SseController extends Controller
                     }
 
                     // Refresh active user heartbeat
-                    $activeUsers = Cache::get($activeUsersKey, []);
-                    $activeUsers[$userId] = now()->timestamp;
-                    Cache::put($activeUsersKey, $activeUsers, 35);
+                    $lock = Cache::lock('sse_active_users_lock', 5);
+                    $lock->block(3);
+                    try {
+                        $activeUsers = Cache::get($activeUsersKey, []);
+                        $activeUsers[$userId] = now()->timestamp;
+                        Cache::put($activeUsersKey, $activeUsers, 35);
+                    } finally {
+                        $lock->force();
+                    }
 
                     // Heartbeat to keep connection alive
                     if (time() - $lastHeartbeat >= $heartbeatInterval) {
@@ -127,9 +139,15 @@ class SseController extends Controller
                 }
             } finally {
                 // Remove active user marker on disconnect
-                $activeUsers = Cache::get($activeUsersKey, []);
-                unset($activeUsers[$userId]);
-                Cache::put($activeUsersKey, $activeUsers, 35);
+                $lock = Cache::lock('sse_active_users_lock', 5);
+                $lock->block(3);
+                try {
+                    $activeUsers = Cache::get($activeUsersKey, []);
+                    unset($activeUsers[$userId]);
+                    Cache::put($activeUsersKey, $activeUsers, 35);
+                } finally {
+                    $lock->force();
+                }
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',
