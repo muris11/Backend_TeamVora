@@ -241,9 +241,15 @@ class TeamController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'logo_url' => 'nullable|string|url',
         ]);
 
-        $team->update($validated);
+        $data = $request->only(['name', 'description']);
+        if ($request->has('logo_url')) {
+            $data['logo_url'] = $request->logo_url;
+        }
+
+        $team->update($data);
 
         return new TeamResource($team);
     }

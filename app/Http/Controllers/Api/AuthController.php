@@ -122,7 +122,12 @@ class AuthController extends Controller
             'avatar_url' => 'nullable|string|url',
         ]);
 
-        $request->user()->update($request->only('name', 'email', 'phone', 'avatar_path'));
+        $data = $request->only('name', 'email', 'phone');
+        if ($request->has('avatar_url')) {
+            $data['avatar_path'] = $request->avatar_url;
+        }
+
+        $request->user()->update($data);
 
         return new UserResource($request->user()->fresh()->load('roles', 'team'));
     }

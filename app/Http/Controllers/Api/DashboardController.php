@@ -35,6 +35,22 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $recentLogs = \App\Models\DailyLog::with('user:id,name,avatar_path')
+            ->where('team_id', $user->team_id)
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        $upcomingRecurringBills = \App\Models\RecurringBill::where('team_id', $user->team_id)
+            ->where('is_active', true)
+            ->where('next_date', '>=', date('Y-m-d'))
+            ->orderBy('next_date', 'asc')
+            ->take(3)
+            ->get();
+
+        $teamMembersCount = \App\Models\User::where('team_id', $user->team_id)->count();
+
         return response()->json([
             'finance' => [
                 'balance' => (float) $currentBalance,
@@ -44,6 +60,9 @@ class DashboardController extends Controller
             ],
             'unpaid_bills' => $unpaidBills,
             'active_tasks' => $activeTasks,
+            'recent_logs' => $recentLogs,
+            'upcoming_recurring_bills' => $upcomingRecurringBills,
+            'team_members_count' => $teamMembersCount,
         ]);
     }
 

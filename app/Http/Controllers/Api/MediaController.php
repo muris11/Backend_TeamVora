@@ -18,6 +18,8 @@ class MediaController extends Controller
 
         if (! $request->user()->isSuperAdmin()) {
             $query->where('team_id', $request->user()->team_id);
+        } else if ($request->query('role') === 'admin') {
+            $query->whereNull('team_id');
         }
 
         $documents = $query->orderBy('created_at', 'desc')
@@ -33,6 +35,8 @@ class MediaController extends Controller
 
         if (! $request->user()->isSuperAdmin()) {
             $query->where('team_id', $request->user()->team_id);
+        } else if ($request->query('role') === 'admin') {
+            $query->whereNull('team_id');
         }
 
         $photos = $query->orderBy('created_at', 'desc')
@@ -109,5 +113,23 @@ class MediaController extends Controller
 
         $media->delete();
         return response()->json(['message' => 'File dihapus.']);
+    }
+
+    public function update(Request $request, TeamMedia $media)
+    {
+        $isAdmin = $request->user()->hasRole('super_admin');
+        if (! $isAdmin && $request->user()->id !== $media->user_id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $media->update([
+            'name' => $request->name,
+        ]);
+
+        return new TeamMediaResource($media->load('user'));
     }
 }

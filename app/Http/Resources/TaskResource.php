@@ -17,6 +17,7 @@ class TaskResource extends JsonResource
             'creator' => new UserResource($this->whenLoaded('creator')),
             'priority' => $this->priority,
             'status' => $this->status,
+            'position' => $this->position ?? 0,
             'due_date' => $this->due_date,
             'created_at' => $this->created_at?->toISOString(),
         ];

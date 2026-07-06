@@ -55,8 +55,9 @@ class AdminPlatformController extends Controller
             ],
             'marketing' => [
                 'hero_title', 'hero_subtitle', 'hero_cta_text', 'hero_cta_link',
+                'hero_cta2_text', 'hero_cta2_link', 'hero_image_url',
                 'features_title', 'features', 'testimonials_title', 'testimonials',
-                'footer_text', 'nav_links',
+                'footer_text', 'nav_links', 'client_logos',
                 'about_content', 'features_content', 'guide_content',
                 'help_content', 'careers_content', 'privacy_content', 'terms_content',
             ],

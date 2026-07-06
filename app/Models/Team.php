@@ -17,6 +17,7 @@ class Team extends Model
         'description',
         'leader_id',
         'settings',
+        'logo_url',
     ];
 
     protected function casts(): array
@@ -24,6 +25,11 @@ class Team extends Model
         return [
             'settings' => 'array',
         ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 
     public function leader(): BelongsTo

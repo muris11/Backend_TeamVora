@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('tasks/{task}', [TaskController::class, 'show']);
     Route::put('tasks/{task}', [TaskController::class, 'update']);
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
+    Route::patch('tasks/reorder', [TaskController::class, 'reorder']);
     Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
 
     // Daily Logs
@@ -143,6 +144,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('media/documents', [MediaController::class, 'documents']);
     Route::get('media/gallery', [MediaController::class, 'gallery']);
     Route::post('media', [MediaController::class, 'store']);
+    Route::put('media/{media}', [MediaController::class, 'update']);
     Route::delete('media/{media}', [MediaController::class, 'destroy']);
 
     // Members & Roles
@@ -200,3 +202,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // SSE Stream (outside auth middleware - uses query token)
 Route::get('events/stream', [SseController::class, 'stream'])->middleware('throttle:300,1');
+Route::options('events/stream', [SseController::class, 'options']);

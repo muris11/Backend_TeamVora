@@ -19,7 +19,8 @@ class TaskController extends Controller
             $query->where('team_id', $request->user()->team_id);
         }
 
-        $tasks = $query->orderBy('created_at', 'desc')
+        $tasks = $query->orderBy('position', 'asc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return TaskResource::collection($tasks)->additional([
@@ -46,6 +47,7 @@ class TaskController extends Controller
             'priority' => $validated['priority'],
             'status' => 'todo',
             'due_date' => $validated['due_date'],
+            'position' => Task::where('team_id', $request->user()->team_id)->max('position') + 1,
         ]);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
@@ -92,5 +94,20 @@ class TaskController extends Controller
 
         $task->delete();
         return response()->json(['message' => 'Task dihapus.']);
+    }
+
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'tasks' => 'required|array',
+            'tasks.*.id' => 'required|string|exists:tasks,id',
+            'tasks.*.position' => 'required|integer|min:0',
+        ]);
+
+        foreach ($validated['tasks'] as $item) {
+            Task::where('id', $item['id'])->update(['position' => $item['position']]);
+        }
+
+        return response()->json(['message' => 'Urutan tugas diperbarui.']);
     }
 }

@@ -11,7 +11,7 @@ class Task extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['team_id', 'title', 'description', 'assignee_id', 'creator_id', 'priority', 'status', 'due_date'];
+    protected $fillable = ['team_id', 'title', 'description', 'assignee_id', 'creator_id', 'priority', 'status', 'due_date', 'position'];
 
     protected function casts(): array
     {
