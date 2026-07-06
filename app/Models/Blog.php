@@ -42,7 +42,7 @@ class Blog extends Model
         });
     }
 
-    public static function generateUniqueSlug($title, $ignoreId = 0)
+    public static function generateUniqueSlug(string $title, $ignoreId = 0)
     {
         $slug = Str::slug($title);
         $originalSlug = $slug;
