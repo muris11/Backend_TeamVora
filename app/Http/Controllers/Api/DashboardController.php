@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
         $recentLogs = \App\Models\DailyLog::with('user:id,name,avatar_path')
             ->where('team_id', $user->team_id)
-            ->orderBy('date', 'desc')
+            ->orderBy('log_date', 'desc')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();

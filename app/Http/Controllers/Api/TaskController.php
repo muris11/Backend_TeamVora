@@ -8,9 +8,15 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class TaskController extends Controller
 {
+    private function orderColumn(): string
+    {
+        return Schema::hasColumn('tasks', 'position') ? 'position' : 'created_at';
+    }
+
     public function index(Request $request)
     {
         $query = Task::with(['creator:id,name', 'assignee:id,name,avatar_path']);
@@ -19,7 +25,7 @@ class TaskController extends Controller
             $query->where('team_id', $request->user()->team_id);
         }
 
-        $tasks = $query->orderBy('position', 'asc')
+        $tasks = $query->orderBy($this->orderColumn(), Schema::hasColumn('tasks', 'position') ? 'asc' : 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -38,7 +44,7 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
         ]);
 
-        $task = Task::create([
+        $taskData = [
             'creator_id' => $request->user()->id,
             'team_id' => $request->user()->team_id,
             'assignee_id' => $validated['assignee_id'],
@@ -47,8 +53,13 @@ class TaskController extends Controller
             'priority' => $validated['priority'],
             'status' => 'todo',
             'due_date' => $validated['due_date'],
-            'position' => 0,
-        ]);
+        ];
+
+        if (Schema::hasColumn('tasks', 'position')) {
+            $taskData['position'] = 0;
+        }
+
+        $task = Task::create($taskData);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {
             $task->assignee->notify(new TaskAssignedNotification($task));
@@ -98,6 +109,10 @@ class TaskController extends Controller
 
     public function reorder(Request $request)
     {
+        if (! Schema::hasColumn('tasks', 'position')) {
+            return response()->json(['message' => 'Fitur urutan belum tersedia.'], 400);
+        }
+
         $validated = $request->validate([
             'tasks' => 'required|array',
             'tasks.*.id' => 'required|string|exists:tasks,id',
