@@ -36,8 +36,8 @@ class EmailTemplateController extends Controller
         $settings = EmailSetting::first() ?? new EmailSetting();
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('email-logos', 'public');
-            $settings->logo_url = asset('storage/' . $path);
+            $path = $request->file('logo')->store('email-logos', 'r2');
+            $settings->logo_url = Storage::disk('r2')->url($path);
         }
 
         if ($request->has('primary_color')) {

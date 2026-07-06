@@ -64,12 +64,12 @@ class CashBookController extends Controller
                 $path = $file->storeAs(
                     'kas/' . date('Y/m'),
                     time() . '_' . $file->getClientOriginalName(),
-                    'public'
+                    'r2'
                 );
             }
 
-            /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
-            $publicDisk = Storage::disk('public');
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
+            $r2Disk = Storage::disk('r2');
 
             $cashBook = CashBook::create([
                 'created_by' => $request->user()->id,
@@ -79,7 +79,7 @@ class CashBookController extends Controller
                 'title' => $validated['category'],
                 'description' => $validated['description'] ?? '',
                 'date' => $validated['transaction_date'],
-                'attachment_path' => $path ? $publicDisk->url($path) : null,
+                'attachment_path' => $path ? $r2Disk->url($path) : null,
             ]);
 
             DB::commit();

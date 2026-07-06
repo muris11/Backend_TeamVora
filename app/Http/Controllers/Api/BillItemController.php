@@ -29,12 +29,12 @@ class BillItemController extends Controller
             $path = $file->storeAs(
                 'bills/' . date('Y/m'),
                 time() . '_' . $file->getClientOriginalName(),
-                'public'
+                'r2'
             );
 
             $billItem->update([
                 'status' => 'pending_verification',
-                'proof_path' => Storage::disk('public')->url($path),
+                'proof_path' => Storage::disk('r2')->url($path),
             ]);
 
             $billItem->splitBill->creator->notify(new ProofUploadedNotification($billItem, $request->user()));

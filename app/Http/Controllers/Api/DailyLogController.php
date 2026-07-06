@@ -37,7 +37,7 @@ class DailyLogController extends Controller
         $path = null;
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $path = $file->storeAs('dailylogs/' . date('Y/m'), time() . '_' . $file->getClientOriginalName(), 'public');
+            $path = $file->storeAs('dailylogs/' . date('Y/m'), time() . '_' . $file->getClientOriginalName(), 'r2');
         }
 
         $log = DailyLog::create([
@@ -46,7 +46,7 @@ class DailyLogController extends Controller
             'log_date' => $validated['log_date'],
             'title' => $validated['title'],
             'content' => $validated['content'],
-            'attachment_path' => $path ? Storage::disk('public')->url($path) : null,
+            'attachment_path' => $path ? Storage::disk('r2')->url($path) : null,
         ]);
 
         return new DailyLogResource($log);
