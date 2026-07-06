@@ -47,7 +47,7 @@ class TaskController extends Controller
             'priority' => $validated['priority'],
             'status' => 'todo',
             'due_date' => $validated['due_date'],
-            'position' => Task::where('team_id', $request->user()->team_id)->max('position') + 1,
+            'position' => 0,
         ]);
 
         if ($task->assignee_id && $task->assignee_id !== $request->user()->id) {

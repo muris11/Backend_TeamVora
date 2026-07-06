@@ -134,20 +134,13 @@ class SseController extends Controller
                     }
                     flush();
 
-                    // Sleep 1 second between checks
-                    usleep(1000000); // 1 second
+                // Sleep 1 second between checks
+                usleep(1000000); // 1 second
                 }
             } finally {
-                // Remove active user marker on disconnect
-                $lock = Cache::lock('sse_active_users_lock', 5);
-                $lock->block(3);
-                try {
-                    $activeUsers = Cache::get($activeUsersKey, []);
-                    unset($activeUsers[$userId]);
-                    Cache::put($activeUsersKey, $activeUsers, 35);
-                } finally {
-                    $lock->force();
-                }
+                // No-op: TTL-based expiry handles cleanup.
+                // If user reconnects within 35s, entry is refreshed.
+                // If not, it expires naturally — no flicker.
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',
