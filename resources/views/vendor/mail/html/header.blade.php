@@ -4,7 +4,8 @@
 <a href="{{ $url }}" style="display: inline-block;">
 @php
     $emailSetting = \App\Models\EmailSetting::first();
-    $logoUrl = $emailSetting && $emailSetting->logo_url ? $emailSetting->logo_url : 'https://cdnteamvora.center.biz.id/teamvora/icon.png';
+    $defaultLogo = 'https://cdn.teamvora.web.id/gallery/2026/07/1783152710_icon.png';
+    $logoUrl = $emailSetting && $emailSetting->logo_url ? $emailSetting->logo_url : $defaultLogo;
 @endphp
 <img src="{{ $logoUrl }}" class="logo" alt="{{ config('app.name') }} Logo" style="max-height: 50px;">
 </a>

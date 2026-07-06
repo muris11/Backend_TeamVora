@@ -51,6 +51,8 @@ class DashboardController extends Controller
 
         $teamMembersCount = \App\Models\User::where('team_id', $user->team_id)->count();
 
+        $chartData = $this->getChartData($user->team_id, $user->id, true);
+
         return response()->json([
             'finance' => [
                 'balance' => (float) $currentBalance,
@@ -63,6 +65,7 @@ class DashboardController extends Controller
             'recent_logs' => $recentLogs,
             'upcoming_recurring_bills' => $upcomingRecurringBills,
             'team_members_count' => $teamMembersCount,
+            'chart_data' => $chartData,
         ]);
     }
 
@@ -89,6 +92,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $chartData = $this->getChartData($user->team_id, $user->id, false);
+
         return response()->json([
             'finance' => [
                 'balance' => (float) ($cashIn - $cashOut),
@@ -102,6 +107,61 @@ class DashboardController extends Controller
             ],
             'unpaid_bills' => $unpaidBills,
             'active_tasks' => $activeTasks,
+            'chart_data' => $chartData,
         ]);
+    }
+    private function getChartData($teamId, $userId, $isLead = false)
+    {
+        $cashFlowData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subMonths($i);
+            $monthName = $date->translatedFormat('M Y');
+            $year = $date->format('Y');
+            $month = $date->format('m');
+
+            $in = CashBook::where('team_id', $teamId)
+                ->where('type', 'in')
+                ->whereYear('date', $year)
+                ->whereMonth('date', $month)
+                ->sum('amount');
+            $out = CashBook::where('team_id', $teamId)
+                ->where('type', 'out')
+                ->whereYear('date', $year)
+                ->whereMonth('date', $month)
+                ->sum('amount');
+            
+            $cashFlowData[] = [
+                'name' => $monthName,
+                'in' => (float)$in,
+                'out' => (float)$out,
+            ];
+        }
+
+        $taskQuery = Task::where('team_id', $teamId);
+        if (!$isLead) {
+            $taskQuery->where('assignee_id', $userId);
+        }
+        
+        $statuses = ['todo', 'in_progress', 'review', 'completed'];
+        $taskDistribution = [];
+        $statusLabels = [
+            'todo' => 'To Do',
+            'in_progress' => 'In Progress',
+            'review' => 'Review',
+            'completed' => 'Completed'
+        ];
+        
+        foreach ($statuses as $status) {
+            $count = (clone $taskQuery)->where('status', $status)->count();
+            $taskDistribution[] = [
+                'name' => $statusLabels[$status],
+                'value' => $count
+            ];
+        }
+
+        return [
+            'cash_flow' => $cashFlowData,
+            'task_distribution' => $taskDistribution
+        ];
     }
 }

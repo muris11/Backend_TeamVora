@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class TeamInvitationController extends Controller
 {
@@ -45,7 +46,7 @@ class TeamInvitationController extends Controller
         return new TeamInvitationResource($invitation);
     }
 
-    public function accept(string $token)
+    public function accept(Request $request, string $token)
     {
         $invitation = TeamInvitation::where('token', $token)
             ->with('team')
@@ -63,17 +64,22 @@ class TeamInvitationController extends Controller
         $user = User::where('email', $invitation->email)->first();
 
         if (! $user) {
-            return response()->json([
-                'message' => 'User belum terdaftar. Silakan register terlebih dahulu.',
+            $request->validate([
+                'password' => 'required|min:8|confirmed',
+            ]);
+
+            $name = explode('@', $invitation->email)[0];
+            $user = User::create([
+                'name' => $name,
                 'email' => $invitation->email,
-                'team_id' => $invitation->team_id,
-                'token' => $token,
-            ], 200);
+                'password' => Hash::make($request->password),
+                'role' => 'member',
+            ]);
+            $user->assignRole('member');
         }
 
         $user->update([
             'team_id' => $invitation->team_id,
-            'role' => 'member',
         ]);
 
         $user->assignRole('member');
@@ -104,6 +110,9 @@ class TeamInvitationController extends Controller
             ->with('team:id,name,slug', 'inviter:id,name,email')
             ->firstOrFail();
 
-        return new TeamInvitationResource($invitation);
+        $isRegistered = User::where('email', $invitation->email)->exists();
+
+        return (new TeamInvitationResource($invitation))
+            ->additional(['is_registered' => $isRegistered]);
     }
 }

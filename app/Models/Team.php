@@ -27,10 +27,6 @@ class Team extends Model
         ];
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
 
     public function leader(): BelongsTo
     {

@@ -12,7 +12,6 @@ class SseController extends Controller
 {
     public function stream(Request $request)
     {
-        // Auth via query string token (EventSource doesn't support custom headers)
         $token = $request->query('token');
         if (! $token) {
             return response()->json(['message' => 'Unauthorized.'], 401);
@@ -32,7 +31,6 @@ class SseController extends Controller
         $activeUsersKey = 'sse_active_users';
         $userId = (string) $user->id;
 
-        // Add user to active set (atomic via lock)
         $lock = Cache::lock('sse_active_users_lock', 5);
         $lock->block(3);
         try {
@@ -40,11 +38,10 @@ class SseController extends Controller
             $activeUsers[$userId] = now()->timestamp;
             Cache::put($activeUsersKey, $activeUsers, 35);
         } finally {
-            $lock->force();
+            $lock->forceRelease();
         }
 
         return response()->stream(function () use ($user, $isSuperAdmin, $activeUsersKey, $userId) {
-            // Send initial connection event
             $this->sendEvent('connected', [
                 'user_id' => $user->id,
                 'timestamp' => now()->toIso8601String(),
@@ -52,18 +49,15 @@ class SseController extends Controller
 
             $lastNotificationId = 0;
             $lastTeamUpdate = now()->timestamp;
-            $heartbeatInterval = 15; // seconds
+            $heartbeatInterval = 15; 
             $lastHeartbeat = time();
             $lastAdminStats = 0;
 
             try {
                 while (true) {
-                    // Check if client disconnected
                     if (connection_aborted()) {
                         break;
                     }
-
-                    // Refresh active user heartbeat
                     $lock = Cache::lock('sse_active_users_lock', 5);
                     $lock->block(3);
                     try {
@@ -71,18 +65,14 @@ class SseController extends Controller
                         $activeUsers[$userId] = now()->timestamp;
                         Cache::put($activeUsersKey, $activeUsers, 35);
                     } finally {
-                        $lock->force();
+                        $lock->forceRelease();
                     }
-
-                    // Heartbeat to keep connection alive
                     if (time() - $lastHeartbeat >= $heartbeatInterval) {
                         $this->sendEvent('heartbeat', [
                             'timestamp' => now()->toIso8601String(),
                         ]);
                         $lastHeartbeat = time();
                     }
-
-                    // Send admin stats every 10 seconds for super admins
                     if ($isSuperAdmin && (time() - $lastAdminStats >= 10)) {
                         $activeUsers = Cache::get('sse_active_users', []);
                         $activeCount = count($activeUsers);
@@ -92,8 +82,6 @@ class SseController extends Controller
                         ]);
                         $lastAdminStats = time();
                     }
-
-                    // Check for new notifications
                     $newNotifications = $user->notifications()
                         ->where('id', '>', $lastNotificationId)
                         ->orderBy('id', 'asc')
@@ -112,7 +100,6 @@ class SseController extends Controller
                         $lastNotificationId = $notification->id;
                     }
 
-                    // Check for team member changes (if user is in a team)
                     if ($user->team_id) {
                         $teamUpdateCheck = User::where('team_id', $user->team_id)
                             ->where('updated_at', '>', now()->subSeconds(5))
@@ -127,20 +114,15 @@ class SseController extends Controller
                             $lastTeamUpdate = $teamUpdateCheck->timestamp;
                         }
                     }
-
-                    // Flush output buffer
                     if (ob_get_level()) {
                         ob_end_flush();
                     }
                     flush();
 
-                // Sleep 1 second between checks
-                usleep(1000000); // 1 second
+                usleep(1000000);
                 }
             } finally {
-                // No-op: TTL-based expiry handles cleanup.
-                // If user reconnects within 35s, entry is refreshed.
-                // If not, it expires naturally — no flicker.
+
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',

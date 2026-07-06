@@ -17,17 +17,17 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
-Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1');
-Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,10');
-Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:100,1');
+Route::post('register', [AuthController::class, 'register'])->middleware('throttle:100,1');
+Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,10');
+Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
 // Public blog
 Route::get('blogs/public', [BlogController::class, 'index']);
 Route::get('blogs/{slug}', [BlogController::class, 'show'])->where('slug', '^(?!manage$).*');
 
 // Invitation accept (public)
-Route::get('invitations/{token}/accept', [TeamInvitationController::class, 'accept']);
+Route::post('invitations/{token}/accept', [TeamInvitationController::class, 'accept']);
 Route::get('invitations/{token}', [TeamInvitationController::class, 'show']);
 
 use App\Http\Controllers\Api\SettingController;

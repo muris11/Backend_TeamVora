@@ -24,9 +24,9 @@
     $footerText = $emailSetting && $emailSetting->footer_text ? $emailSetting->footer_text : '© ' . date('Y') . ' ' . config('app.name') . '. ' . __('All rights reserved.');
 @endphp
 <style>
-    .button-primary { background-color: {{ $primaryColor }} !important; border-color: {{ $primaryColor }} !important; }
+    .button-primary { background-color: {{ $primaryColor }} !important; border-color: {{ $primaryColor }} !important; color: #ffffff !important; }
     .button-primary:hover { background-color: {{ $primaryColor }} !important; filter: brightness(0.9); }
-    a { color: {{ $primaryColor }} !important; }
+    a:not(.button-primary) { color: {{ $primaryColor }} !important; }
 </style>
 
 {{-- Footer --}}
