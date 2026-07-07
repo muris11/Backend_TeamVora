@@ -40,6 +40,12 @@ class BlogController extends Controller
             'content' => 'required|string',
             'status' => 'sometimes|in:draft,published,scheduled',
             'published_at' => 'nullable|date',
+            'focus_keyword' => 'nullable|string|max:100',
+            'seo_title' => 'nullable|string|max:70',
+            'seo_description' => 'nullable|string|max:200',
+            'seo_keywords' => 'nullable',
+            'canonical_url' => 'nullable|url|max:255',
+            'twitter_card' => 'nullable|in:summary,summary_large_image',
         ];
 
         if ($request->hasFile('featured_image')) {
@@ -48,10 +54,24 @@ class BlogController extends Controller
             $rules['featured_image'] = 'nullable|string';
         }
 
+        if ($request->hasFile('og_image')) {
+            $rules['og_image'] = 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240';
+        } else {
+            $rules['og_image'] = 'nullable|string';
+        }
+
         $validated = $request->validate($rules);
 
         $validated['author_id'] = $request->user()->id;
         $validated['team_id'] = $request->user()->team_id;
+        $validated['twitter_card'] = $validated['twitter_card'] ?? 'summary_large_image';
+
+        if (is_string($validated['seo_keywords'] ?? null)) {
+            $decoded = json_decode($validated['seo_keywords'], true);
+            $validated['seo_keywords'] = is_array($decoded) ? array_values(array_filter(array_map('trim', $decoded))) : [];
+        } elseif (!is_array($validated['seo_keywords'] ?? null)) {
+            $validated['seo_keywords'] = [];
+        }
 
         if ($request->hasFile('featured_image')) {
             $file = $request->file('featured_image');
@@ -64,6 +84,19 @@ class BlogController extends Controller
             /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
             $disk = Storage::disk('r2');
             $validated['featured_image'] = $disk->url($path);
+        }
+
+        if ($request->hasFile('og_image')) {
+            $file = $request->file('og_image');
+            $teamStr = $request->user()->team ? $request->user()->team->slug : 'superadmin';
+            $path = $file->storeAs(
+                $teamStr . '/blog/og/' . date('Y/m'),
+                time() . '_' . $file->getClientOriginalName(),
+                'r2'
+            );
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = Storage::disk('r2');
+            $validated['og_image'] = $disk->url($path);
         }
 
         unset($validated['featured_image_raw']);
@@ -111,6 +144,12 @@ class BlogController extends Controller
             'content' => 'sometimes|string',
             'status' => 'sometimes|in:draft,published,scheduled',
             'published_at' => 'nullable|date',
+            'focus_keyword' => 'nullable|string|max:100',
+            'seo_title' => 'nullable|string|max:70',
+            'seo_description' => 'nullable|string|max:200',
+            'seo_keywords' => 'nullable',
+            'canonical_url' => 'nullable|url|max:255',
+            'twitter_card' => 'nullable|in:summary,summary_large_image',
         ];
 
         if ($request->hasFile('featured_image')) {
@@ -119,7 +158,22 @@ class BlogController extends Controller
             $rules['featured_image'] = 'nullable|string';
         }
 
+        if ($request->hasFile('og_image')) {
+            $rules['og_image'] = 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:10240';
+        } else {
+            $rules['og_image'] = 'nullable|string';
+        }
+
         $validated = $request->validate($rules);
+
+        if (array_key_exists('seo_keywords', $validated)) {
+            if (is_string($validated['seo_keywords'])) {
+                $decoded = json_decode($validated['seo_keywords'], true);
+                $validated['seo_keywords'] = is_array($decoded) ? array_values(array_filter(array_map('trim', $decoded))) : [];
+            } elseif (!is_array($validated['seo_keywords'])) {
+                $validated['seo_keywords'] = [];
+            }
+        }
 
         if ($request->hasFile('featured_image')) {
             $file = $request->file('featured_image');
@@ -132,6 +186,19 @@ class BlogController extends Controller
             /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
             $disk = Storage::disk('r2');
             $validated['featured_image'] = $disk->url($path);
+        }
+
+        if ($request->hasFile('og_image')) {
+            $file = $request->file('og_image');
+            $teamStr = $request->user()->team ? $request->user()->team->slug : 'superadmin';
+            $path = $file->storeAs(
+                $teamStr . '/blog/og/' . date('Y/m'),
+                time() . '_' . $file->getClientOriginalName(),
+                'r2'
+            );
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = Storage::disk('r2');
+            $validated['og_image'] = $disk->url($path);
         }
 
         if (isset($validated['status']) && $validated['status'] === 'published' && empty($blog->published_at)) {

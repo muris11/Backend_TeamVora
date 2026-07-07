@@ -21,12 +21,20 @@ class Blog extends Model
         'status',
         'featured_image',
         'published_at',
+        'focus_keyword',
+        'seo_title',
+        'seo_description',
+        'seo_keywords',
+        'canonical_url',
+        'og_image',
+        'twitter_card',
     ];
 
     protected function casts(): array
     {
         return [
             'published_at' => 'datetime',
+            'seo_keywords' => 'array',
         ];
     }
 
