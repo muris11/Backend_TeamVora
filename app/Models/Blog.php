@@ -13,11 +13,13 @@ class Blog extends Model
 
     protected $fillable = [
         'team_id',
+        'category_id',
         'author_id',
         'title',
         'slug',
         'excerpt',
         'content',
+        'tags',
         'status',
         'featured_image',
         'published_at',
@@ -35,6 +37,7 @@ class Blog extends Model
         return [
             'published_at' => 'datetime',
             'seo_keywords' => 'array',
+            'tags' => 'array',
         ];
     }
 
@@ -74,5 +77,10 @@ class Blog extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 }

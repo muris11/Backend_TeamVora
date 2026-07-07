@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\SseController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\BillItemController;
 use App\Http\Controllers\Api\CashBookController;
 use App\Http\Controllers\Api\DashboardController;
@@ -165,6 +166,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('blogs', [BlogController::class, 'store']);
     Route::put('blogs/{blog}', [BlogController::class, 'update']);
     Route::delete('blogs/{blog}', [BlogController::class, 'destroy']);
+
+    // Categories
+    Route::apiResource('categories', CategoryController::class);
 
     // Team Invitations
     Route::post('teams/{team}/invitations', [TeamInvitationController::class, 'send']);

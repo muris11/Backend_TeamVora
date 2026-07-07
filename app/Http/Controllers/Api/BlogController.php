@@ -25,7 +25,9 @@ class BlogController extends Controller
             ->orderBy('published_at', 'desc')
             ->paginate(12);
 
-        return BlogResource::collection($blogs);
+        return BlogResource::collection($blogs)
+            ->response()
+            ->header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
 
     public function store(Request $request)
@@ -40,6 +42,8 @@ class BlogController extends Controller
             'content' => 'required|string',
             'status' => 'sometimes|in:draft,published,scheduled',
             'published_at' => 'nullable|date',
+            'category_id' => 'nullable|exists:categories,id',
+            'tags' => 'nullable',
             'focus_keyword' => 'nullable|string|max:100',
             'seo_title' => 'nullable|string|max:70',
             'seo_description' => 'nullable|string|max:200',
@@ -71,6 +75,13 @@ class BlogController extends Controller
             $validated['seo_keywords'] = is_array($decoded) ? array_values(array_filter(array_map('trim', $decoded))) : [];
         } elseif (!is_array($validated['seo_keywords'] ?? null)) {
             $validated['seo_keywords'] = [];
+        }
+
+        if (is_string($validated['tags'] ?? null)) {
+            $decoded = json_decode($validated['tags'], true);
+            $validated['tags'] = is_array($decoded) ? array_values(array_filter(array_map('trim', $decoded))) : [];
+        } elseif (!is_array($validated['tags'] ?? null)) {
+            $validated['tags'] = [];
         }
 
         if ($request->hasFile('featured_image')) {
@@ -144,6 +155,8 @@ class BlogController extends Controller
             'content' => 'sometimes|string',
             'status' => 'sometimes|in:draft,published,scheduled',
             'published_at' => 'nullable|date',
+            'category_id' => 'nullable|exists:categories,id',
+            'tags' => 'nullable',
             'focus_keyword' => 'nullable|string|max:100',
             'seo_title' => 'nullable|string|max:70',
             'seo_description' => 'nullable|string|max:200',
@@ -172,6 +185,15 @@ class BlogController extends Controller
                 $validated['seo_keywords'] = is_array($decoded) ? array_values(array_filter(array_map('trim', $decoded))) : [];
             } elseif (!is_array($validated['seo_keywords'])) {
                 $validated['seo_keywords'] = [];
+            }
+        }
+
+        if (array_key_exists('tags', $validated)) {
+            if (is_string($validated['tags'])) {
+                $decoded = json_decode($validated['tags'], true);
+                $validated['tags'] = is_array($decoded) ? array_values(array_filter(array_map('trim', $decoded))) : [];
+            } elseif (!is_array($validated['tags'])) {
+                $validated['tags'] = [];
             }
         }
 

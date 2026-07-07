@@ -20,6 +20,13 @@ class BlogResource extends JsonResource
             'status' => $this->status,
             'featured_image' => $this->featured_image,
             'published_at' => $this->published_at?->toISOString(),
+            'category_id' => $this->category_id,
+            'category' => $this->category ? [
+                'id' => $this->category->id,
+                'name' => $this->category->name,
+                'slug' => $this->category->slug,
+            ] : null,
+            'tags' => $this->tags ?? [],
             'focus_keyword' => $this->focus_keyword,
             'seo_title' => $this->seo_title,
             'seo_description' => $this->seo_description,
