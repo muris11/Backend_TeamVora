@@ -55,8 +55,8 @@
         }
         .button {
             display: inline-block;
-            background-color: #2563eb;
-            color: #ffffff !important;
+            background-color: {{ $settings['email_primary_color'] ?? '#2563eb' }};
+            color: {{ $settings['email_button_color'] ?? '#ffffff' }} !important;
             padding: 12px 24px;
             border-radius: 8px;
             text-decoration: none;
@@ -64,7 +64,7 @@
             margin-top: 16px;
         }
         .button:hover {
-            background-color: #1d4ed8;
+            opacity: 0.9;
         }
         h1 {
             font-size: 20px;
@@ -97,7 +97,7 @@
                 @if($settings['email_reply_to'] ?? false)
                     <p>Balas ke: <a href="mailto:{{ $settings['email_reply_to'] }}" style="color: #6b7280;">{{ $settings['email_reply_to'] }}</a></p>
                 @endif
-                <p>&copy; {{ date('Y') }} TeamVora. Hak Cipta Dilindungi.</p>
+                <p>&copy; {{ date('Y') }} {{ $settings['email_footer_text'] ?? 'TeamVora. Hak Cipta Dilindungi.' }}</p>
             </div>
         </div>
     </div>

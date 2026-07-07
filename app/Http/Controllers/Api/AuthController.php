@@ -118,7 +118,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $request->user()->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20|unique:users,phone,' . $request->user()->id,
             'avatar_url' => 'nullable|string|url',
         ]);
 
@@ -213,6 +213,9 @@ class AuthController extends Controller
         $settingsData['email_logo_url'] = $settings['general']['logo_url'] ?? null;
         $settingsData['email_sender_name'] = $settings['email']['email_sender_name'] ?? 'TeamVora';
         $settingsData['email_reply_to'] = $settings['email']['email_reply_to'] ?? null;
+        $settingsData['email_primary_color'] = $settings['email']['email_primary_color'] ?? '#2563eb';
+        $settingsData['email_button_color'] = $settings['email']['email_button_color'] ?? '#ffffff';
+        $settingsData['email_footer_text'] = $settings['email']['email_footer_text'] ?? 'TeamVora. Hak Cipta Dilindungi.';
 
         Mail::send('emails.reset_password', ['resetLink' => $resetLink, 'settings' => $settingsData], function ($message) use ($user, $settingsData) {
             $message->to($user->email)

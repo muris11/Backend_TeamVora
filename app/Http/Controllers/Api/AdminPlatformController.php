@@ -44,6 +44,8 @@ class AdminPlatformController extends Controller
             'general' => ['site_name', 'tagline', 'favicon_url', 'logo_url'],
             'contact' => ['contact_email', 'support_email', 'phone', 'address', 'office_hours'],
             'social'  => ['twitter_url', 'linkedin_url'],
+            'regional'=> ['timezone', 'language', 'currency'],
+            'maintenance' => ['maintenance_mode', 'maintenance_message'],
             'email'   => [
                 'email_logo_url', 'email_sender_name', 'email_reply_to', 
                 'email_button_color', 'email_footer_text', 'email_primary_color'
@@ -119,6 +121,7 @@ class AdminPlatformController extends Controller
         }
     }
 
+
     private function getDiskUsage()
     {
         $total = disk_total_space('/');
@@ -155,6 +158,9 @@ class AdminPlatformController extends Controller
         $settingsData['email_logo_url'] = $settings['general']['logo_url'] ?? null;
         $settingsData['email_sender_name'] = $settings['email']['email_sender_name'] ?? 'TeamVora';
         $settingsData['email_reply_to'] = $settings['email']['email_reply_to'] ?? null;
+        $settingsData['email_primary_color'] = $settings['email']['email_primary_color'] ?? '#2563eb';
+        $settingsData['email_button_color'] = $settings['email']['email_button_color'] ?? '#ffffff';
+        $settingsData['email_footer_text'] = $settings['email']['email_footer_text'] ?? 'TeamVora. Hak Cipta Dilindungi.';
 
         try {
             Mail::send('emails.test', ['settings' => $settingsData], function ($message) use ($request, $settingsData) {

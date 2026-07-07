@@ -47,7 +47,7 @@ class SseController extends Controller
                 'timestamp' => now()->toIso8601String(),
             ]);
 
-            $lastNotificationId = 0;
+            $lastNotificationTime = now();
             $lastTeamUpdate = now()->timestamp;
             $heartbeatInterval = 15; 
             $lastHeartbeat = time();
@@ -83,8 +83,8 @@ class SseController extends Controller
                         $lastAdminStats = time();
                     }
                     $newNotifications = $user->notifications()
-                        ->where('id', '>', $lastNotificationId)
-                        ->orderBy('id', 'asc')
+                        ->where('created_at', '>', $lastNotificationTime)
+                        ->orderBy('created_at', 'asc')
                         ->get();
 
                     foreach ($newNotifications as $notification) {
@@ -97,7 +97,9 @@ class SseController extends Controller
                             'read_at' => $notification->read_at?->toIso8601String(),
                             'created_at' => $notification->created_at->toIso8601String(),
                         ]);
-                        $lastNotificationId = $notification->id;
+                        if ($notification->created_at > $lastNotificationTime) {
+                            $lastNotificationTime = $notification->created_at;
+                        }
                     }
 
                     if ($user->team_id) {

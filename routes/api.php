@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\RecurringBillController;
 use App\Http\Controllers\Api\SplitBillController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TeamInvitationController;
+use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\AdminTicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
@@ -141,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('daily-logs/{dailyLog}', [DailyLogController::class, 'destroy']);
 
     // Media
+    Route::get('media', [MediaController::class, 'index']);
     Route::get('media/documents', [MediaController::class, 'documents']);
     Route::get('media/gallery', [MediaController::class, 'gallery']);
     Route::post('media', [MediaController::class, 'store']);
@@ -149,6 +152,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Members & Roles
     Route::get('members', [MemberController::class, 'index']);
+    Route::post('members', [MemberController::class, 'store']);
+    Route::put('members/{user}', [MemberController::class, 'update']);
+    Route::delete('members/{user}', [MemberController::class, 'destroy']);
     Route::put('members/{user}/role', [MemberController::class, 'updateRole']);
     Route::put('members/{user}/permissions', [MemberController::class, 'updatePermissions']);
     Route::put('roles/{role}/permissions', [MemberController::class, 'updateRolePermissions']);
@@ -171,6 +177,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Team member update (team leader can edit members)
     Route::put('teams/{team}/members/{user}/update', [TeamController::class, 'updateMember']);
 
+    // Lead Tickets
+    Route::get('lead/tickets', [TicketController::class, 'index']);
+    Route::post('lead/tickets', [TicketController::class, 'store']);
+    Route::get('lead/tickets/{ticket}', [TicketController::class, 'show']);
+
     // Contact Messages (admin only)
     Route::middleware([\App\Http\Middleware\CheckRole::class.':super_admin'])->group(function () {
         Route::get('contact', [ContactController::class, 'index']);
@@ -181,6 +192,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('admin/platform-settings', [AdminPlatformController::class, 'updateSettings']);
         Route::post('admin/platform-settings/test-email', [AdminPlatformController::class, 'testEmail']);
         Route::get('admin/system-status', [AdminPlatformController::class, 'getSystemStatus']);
+
+        // Admin Tickets
+        Route::get('admin/tickets', [AdminTicketController::class, 'index']);
+        Route::get('admin/tickets/{ticket}', [AdminTicketController::class, 'show']);
+        Route::put('admin/tickets/{ticket}/status', [AdminTicketController::class, 'updateStatus']);
 
         // Admin stats
         Route::get('admin/stats', function () {

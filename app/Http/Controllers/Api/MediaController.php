@@ -28,6 +28,22 @@ class MediaController extends Controller
         return TeamMediaResource::collection($documents);
     }
 
+    public function index(Request $request)
+    {
+        $query = TeamMedia::with('user:id,name');
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where('team_id', $request->user()->team_id);
+        } else if ($request->query('role') === 'admin') {
+            $query->whereNull('team_id');
+        }
+
+        $media = $query->orderBy('created_at', 'desc')
+            ->paginate(24);
+
+        return TeamMediaResource::collection($media);
+    }
+
     public function gallery(Request $request)
     {
         $query = TeamMedia::with('user:id,name')

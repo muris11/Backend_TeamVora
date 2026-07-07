@@ -102,8 +102,81 @@ class TeamController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        // Remove all members from team
-        User::where('team_id', $team->id)->update(['team_id' => null, 'role' => 'member']);
+        $r2Url = rtrim(config('filesystems.disks.r2.url', 'https://' . env('R2_CUSTOM_DOMAIN')), '/');
+        $pathsToDelete = [];
+        
+        $extractPath = function ($url) use ($r2Url) {
+            if (!$url) return null;
+            if (str_starts_with($url, $r2Url)) {
+                return ltrim(str_replace($r2Url, '', $url), '/');
+            }
+            return ltrim($url, '/'); // fallback
+        };
+
+        // Gather user avatars and delete non-superadmins
+        $users = User::where('team_id', $team->id)->get();
+        foreach ($users as $user) {
+            if (! $user->isSuperAdmin()) {
+                if ($user->avatar_path) {
+                    $pathsToDelete[] = $extractPath($user->avatar_path);
+                }
+                $user->delete();
+            } else {
+                $user->update(['team_id' => null, 'role' => 'member']);
+            }
+        }
+
+        // Gather files from relations before cascade deleting
+        foreach ($team->blogs as $blog) {
+            if ($blog->featured_image) {
+                $pathsToDelete[] = $extractPath($blog->featured_image);
+            }
+        }
+        
+        foreach ($team->dailyLogs as $log) {
+            if ($log->attachment_path) {
+                $pathsToDelete[] = $extractPath($log->attachment_path);
+            }
+        }
+        
+        foreach ($team->cashBooks as $cb) {
+            if ($cb->attachment_path) {
+                $pathsToDelete[] = $extractPath($cb->attachment_path);
+            }
+        }
+        
+        foreach ($team->teamMedia as $media) {
+            if ($media->file_path) {
+                $pathsToDelete[] = $extractPath($media->file_path);
+            }
+        }
+
+        if ($team->logo_url) {
+            $pathsToDelete[] = $extractPath($team->logo_url);
+        }
+
+        // Cascade delete all related data
+        $team->cashBooks()->delete();
+        $team->splitBills()->delete();
+        $team->tasks()->delete();
+        $team->dailyLogs()->delete();
+        $team->recurringBills()->delete();
+        $team->teamMedia()->delete();
+        $team->blogs()->delete();
+        $team->invitations()->delete();
+
+        // Delete gathered files
+        $pathsToDelete = array_filter(array_unique($pathsToDelete));
+        if (count($pathsToDelete) > 0) {
+            try {
+                \Illuminate\Support\Facades\Storage::disk('r2')->delete($pathsToDelete);
+            } catch (\Throwable $e) {
+                logger()->warning('Failed to delete team files: ' . $e->getMessage());
+            }
+        }
+
+        // Delete R2 storage directory for this team (catches any leftovers stored specifically in team slug)
+        \Illuminate\Support\Facades\Storage::disk('r2')->deleteDirectory($team->slug);
 
         $team->delete();
 

@@ -30,10 +30,6 @@ class Blog extends Model
         ];
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
 
     protected static function booted(): void
     {
