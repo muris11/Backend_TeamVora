@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TeamInvitationController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\AdminTicketController;
+use App\Http\Controllers\Api\ChatController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
@@ -181,6 +182,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('lead/tickets', [TicketController::class, 'index']);
     Route::post('lead/tickets', [TicketController::class, 'store']);
     Route::get('lead/tickets/{ticket}', [TicketController::class, 'show']);
+
+    // Chat
+    Route::get('teams/{team}/conversations', [ChatController::class, 'getConversations']);
+    Route::post('teams/{team}/start-dm', [ChatController::class, 'startDm']);
+    Route::get('conversations/{conversation}/messages', [ChatController::class, 'getMessages']);
+    Route::post('conversations/{conversation}/messages', [ChatController::class, 'sendMessage']);
 
     // Contact Messages (admin only)
     Route::middleware([\App\Http\Middleware\CheckRole::class.':super_admin'])->group(function () {
